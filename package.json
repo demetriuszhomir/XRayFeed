@@ -1,0 +1,22 @@
+{
+  "name": "xrayfeed",
+  "version": "1.0.0",
+  "description": "Chrome extension that highlights high-performing posts on X",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "build": "bun run build.ts",
+    "dev": "bun run build.ts --watch",
+    "clean": "rm -rf dist",
+    "icons": "bun run generate-icons.ts"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.1.27",
+    "sharp": "^0.34.5"
+  },
+  "peerDependencies": {
+    "typescript": "^5"
+  },
+  "author": "Dmitry Zhomir",
+  "license": "MIT"
+}

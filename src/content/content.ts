@@ -1,0 +1,142 @@
+import { getConfig, onMessage, type ExtensionConfig, type MessageType } from '../shared/storage.ts';
+
+let config: ExtensionConfig;
+let intervalId: number | null = null;
+let isActive = false;
+
+async function init() {
+  config = await getConfig();
+  isActive = config.isActive;
+  
+  if (isActive) {
+    startHighlighting();
+  }
+  
+  setupMessageListener();
+}
+
+function setupMessageListener() {
+  onMessage((message: MessageType, sender, sendResponse) => {
+    switch (message.type) {
+      case 'START':
+        isActive = true;
+        startHighlighting();
+        sendResponse({ success: true });
+        break;
+      case 'STOP':
+        isActive = false;
+        stopHighlighting();
+        sendResponse({ success: true });
+        break;
+      case 'UPDATE_CONFIG':
+        config = { ...config, ...message.config };
+        if (isActive) {
+          restartHighlighting();
+        }
+        sendResponse({ success: true });
+        break;
+      case 'GET_STATUS':
+        sendResponse({ isActive });
+        break;
+    }
+    return true;
+  });
+}
+
+function startHighlighting() {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+  }
+  
+  markFilteredPosts();
+  intervalId = window.setInterval(() => {
+    markFilteredPosts();
+  }, config.frequency);
+}
+
+function stopHighlighting() {
+  if (intervalId !== null) {
+    clearInterval(intervalId);
+    intervalId = null;
+  }
+  clearAllHighlights();
+}
+
+function restartHighlighting() {
+  stopHighlighting();
+  if (isActive) {
+    startHighlighting();
+  }
+}
+
+function clearAllHighlights() {
+  const tweets = document.querySelectorAll('article[data-testid="tweet"]');
+  tweets.forEach((tweet) => {
+    if (tweet instanceof HTMLElement) {
+      tweet.style.backgroundColor = '';
+    }
+  });
+}
+
+interface TweetData {
+  tweet: HTMLElement;
+  diffHours: number;
+  diffMinutes: number;
+  id: string | null;
+  originalId: string | null;
+  likes: number;
+}
+
+function markFilteredPosts() {
+  const now = new Date();
+  const tweets = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
+  
+  const tweetData: TweetData[] = tweets.map((tweet) => {
+    if (!(tweet instanceof HTMLElement)) {
+      return null;
+    }
+    
+    const timeEl = tweet.querySelector('time');
+    const postTime = timeEl ? new Date(timeEl.getAttribute('datetime') || '') : null;
+    const diffMs = postTime ? now.getTime() - postTime.getTime() : 0;
+    const diffHours = diffMs / (1000 * 60 * 60);
+    const diffMinutes = diffMs / (1000 * 60);
+    const id = tweet.getAttribute('aria-labelledby');
+    const replyLink = tweet.querySelector('a[href*="/status/"]');
+    const originalId = replyLink ? replyLink.getAttribute('href')?.split('/status/')[1] || null : null;
+    const likeButton = tweet.querySelector('button[data-testid="like"]');
+    const likesText = likeButton ? likeButton.getAttribute('aria-label') || '0 Likes' : '0 Likes';
+    const likes = parseInt(likesText.replace(' Like', '').replace(' Likes', '')) || 0;
+    
+    return { tweet, diffHours, diffMinutes, id, originalId, likes };
+  }).filter((data): data is TweetData => data !== null);
+  
+  tweetData.forEach((data) => {
+    let shouldFilter = false;
+    
+    if (data.diffHours > config.maxHours) {
+      const hasYoungReply = tweetData.some((other) => 
+        other.originalId === data.id && other.diffHours <= config.maxHours
+      );
+      if (!hasYoungReply) {
+        shouldFilter = true;
+      }
+    }
+    
+    if (data.diffMinutes > 10 && data.diffHours > 0 && data.likes / data.diffHours < config.likesPerHourThreshold) {
+      shouldFilter = true;
+    }
+    
+    if (!shouldFilter) {
+      data.tweet.style.backgroundColor = config.highlightColor;
+    } else {
+      data.tweet.style.backgroundColor = '';
+    }
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', init);
+} else {
+  init();
+}
