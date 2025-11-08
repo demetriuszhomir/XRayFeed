@@ -121,10 +121,6 @@ The project includes a GitHub Actions workflow for automated builds and releases
 
 This is a personal project, but suggestions and bug reports are welcome via GitHub Issues.
 
-## License
-
-MIT License - see LICENSE file for details
-
 ## Author
 
 Created by [Dmitry Zhomir](https://demetriuszhomir.com/)
