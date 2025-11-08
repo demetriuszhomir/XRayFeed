@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import { writeFileSync, mkdirSync, existsSync } from 'fs';
+import { writeFileSync, mkdirSync, existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
 const sizes = [16, 48, 128];
@@ -54,6 +54,10 @@ async function generateIcons() {
       .png()
       .toFile(pngPath);
     console.log(`✓ Converted to ${pngPath} (${size}x${size})`);
+    
+    // Clean up SVG file after PNG conversion
+    unlinkSync(svgPath);
+    console.log(`🗑️  Deleted ${svgPath} (no longer needed)`);
   }
   
   console.log('\n✅ All icons generated successfully!');
