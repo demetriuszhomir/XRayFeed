@@ -2,7 +2,7 @@ import sharp from 'sharp';
 import { writeFileSync, mkdirSync, existsSync, unlinkSync } from 'fs';
 import { join } from 'path';
 
-const sizes = [16, 48, 128];
+const sizes = [16, 32, 48, 128];
 const assetsDir = './assets';
 
 if (!existsSync(assetsDir)) {
