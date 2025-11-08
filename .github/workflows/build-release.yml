@@ -1,0 +1,78 @@
+name: Build and Release XRayFeed
+
+on:
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'Release tag name (e.g., v1.0.0) - leave empty to skip release creation'
+        required: false
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      
+      - name: Install dependencies
+        run: bun install
+      
+      - name: Build extension
+        run: bun run build
+      
+      - name: Determine archive name
+        id: archive
+        run: |
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            echo "name=xrayfeed-${{ github.event.inputs.release_tag }}.zip" >> $GITHUB_OUTPUT
+          else
+            echo "name=xrayfeed-build-${{ github.run_number }}.zip" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Create extension archive
+        run: |
+          cd dist
+          zip -r ../${{ steps.archive.outputs.name }} .
+          cd ..
+      
+      - name: Create Release
+        if: github.event.inputs.release_tag != ''
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event.inputs.release_tag }}
+          name: Release ${{ github.event.inputs.release_tag }}
+          draft: false
+          prerelease: false
+          files: ${{ steps.archive.outputs.name }}
+          body: |
+            ## XRayFeed ${{ github.event.inputs.release_tag }}
+            
+            Chrome extension for highlighting high-performing posts on X.
+            
+            ### Installation
+            1. Download the `xrayfeed-${{ github.event.inputs.release_tag }}.zip` file
+            2. Extract the ZIP file
+            3. Open Chrome and navigate to `chrome://extensions/`
+            4. Enable "Developer mode" in the top right
+            5. Click "Load unpacked" and select the extracted folder
+            
+            ### Features
+            - Highlights posts with high engagement rates
+            - Configurable thresholds and update frequency
+            - Works only on https://x.com/home
+            - Persistent settings across sessions
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: xrayfeed-extension
+          path: ${{ steps.archive.outputs.name }}
