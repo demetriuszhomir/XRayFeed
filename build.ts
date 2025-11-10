@@ -60,6 +60,11 @@ async function build() {
     }
   }
 
+  await copyFile('./LICENSE', join(distDir, 'LICENSE'));
+  if (existsSync('./THIRD_PARTY_NOTICES.md')) {
+    await copyFile('./THIRD_PARTY_NOTICES.md', join(distDir, 'THIRD_PARTY_NOTICES.md'));
+  }
+
   console.log('✅ Build complete!');
 }
 
