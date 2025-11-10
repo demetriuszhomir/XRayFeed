@@ -1,6 +1,14 @@
+<div align="center">
+
+![image](assets/icon128.png)
+
 # XRayFeed
 
-A Chrome extension that highlights high-performing posts on X (formerly Twitter). XRayFeed scans your home timeline and marks posts based on engagement rate and recency, helping you quickly identify trending content.
+A Chrome extension that highlights high-performing posts on X (formerly Twitter). 
+
+XRayFeed scans your home timeline and marks posts based on engagement rate & recency, helping you quickly identify trending content.
+
+</div>
 
 ## Features
 
@@ -43,18 +51,6 @@ A Chrome extension that highlights high-performing posts on X (formerly Twitter)
 
 5. Load the `dist` folder as an unpacked extension in Chrome (see step 3-5 above)
 
-## Icon Setup
-
-Before building, you need to create three icon files in the `assets` folder:
-- `icon16.png` (16x16 pixels)
-- `icon48.png` (48x48 pixels)
-- `icon128.png` (128x128 pixels)
-
-You can:
-- Design custom icons using any image editor
-- Use the included `create-icons.js` script to generate SVG placeholders, then convert to PNG
-- Use online tools like [favicon-generator.org](https://www.favicon-generator.org/)
-
 ## Usage
 
 1. Navigate to https://x.com/home in Chrome
@@ -76,57 +72,12 @@ XRayFeed uses two filtering criteria:
 
 Posts that pass both filters are highlighted with your chosen background color.
 
-## Development
+---
 
-### Project Structure
+<div align="center">
 
-```
-XRayFeed/
-├── src/
-│   ├── background/       # Service worker for extension lifecycle
-│   ├── content/          # Content script for X.com home page
-│   ├── popup/            # Popup UI with Fluent UI components
-│   └── shared/           # Shared utilities and storage
-├── assets/               # Extension icons
-├── .github/workflows/    # CI/CD pipeline
-├── manifest.json         # Chrome extension manifest V3
-├── build.ts              # Bun build script
-└── package.json          # Project dependencies
-```
+Check out my other projects: https://demetriuszhomir.com<br>
+🔹<br>
+[X profile](https://x.com/DemetriusZhomir) <b>|</b> [YouTube channel](https://www.youtube.com/@DemetriusZhomir)
 
-### Build Commands
-
-- `bun run build` - Build the extension for production
-- `bun run dev` - Build in watch mode (not yet implemented)
-- `bun run clean` - Remove the dist folder
-
-### Tech Stack
-
-- **Runtime**: [Bun](https://bun.com) for fast builds and TypeScript support
-- **UI Framework**: [Fluent UI Web Components](https://github.com/microsoft/fluentui)
-- **Language**: TypeScript with strict mode
-- **Extension API**: Chrome Extension Manifest V3
-
-## CI/CD
-
-The project includes a GitHub Actions workflow for automated builds and releases:
-
-1. Go to the **Actions** tab in your GitHub repository
-2. Select "Build and Release XRayFeed"
-3. Click "Run workflow"
-4. Enter a release tag (e.g., `v1.0.0`)
-5. The workflow will build the extension, create a release, and upload the ZIP file
-
-## Contributing
-
-This is a personal project, but suggestions and bug reports are welcome via GitHub Issues.
-
-## Author
-
-Created by [Dmitry Zhomir](https://demetriuszhomir.com/)
-
-## Acknowledgments
-
-- Built with [Bun](https://bun.com)
-- UI powered by [Microsoft Fluent UI](https://github.com/microsoft/fluentui)
-- Inspired by the need to filter high-signal content on social media
+</div>
