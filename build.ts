@@ -1,4 +1,4 @@
-import { mkdir, rm, copyFile } from 'fs/promises';
+import { mkdir, rm, copyFile, readFile, writeFile } from 'fs/promises';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
@@ -43,7 +43,12 @@ async function build() {
   await mkdir(join(distDir, 'popup'), { recursive: true });
   await copyFile(join(srcDir, 'popup/popup.html'), join(distDir, 'popup/popup.html'));
   await copyFile(join(srcDir, 'popup/web-components.min.js'), join(distDir, 'popup/web-components.min.js'));
-  await copyFile('./manifest.json', join(distDir, 'manifest.json'));
+  
+  // Read version from package.json and inject into manifest
+  const packageJson = JSON.parse(await readFile('./package.json', 'utf-8'));
+  const manifestJson = JSON.parse(await readFile('./manifest.json', 'utf-8'));
+  manifestJson.version = packageJson.version;
+  await writeFile(join(distDir, 'manifest.json'), JSON.stringify(manifestJson, null, 2));
   
   if (existsSync('./assets')) {
     await mkdir(join(distDir, 'assets'), { recursive: true });

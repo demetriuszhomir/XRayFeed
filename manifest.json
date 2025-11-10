@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "XRayFeed",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "description": "Highlights high-performing posts on X",
   "author": "Dmitry Zhomir",
   "permissions": [
