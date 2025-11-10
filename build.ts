@@ -49,6 +49,7 @@ async function build() {
     await mkdir(join(distDir, 'assets'), { recursive: true });
     if (existsSync('./assets/icon16.png')) {
       await copyFile('./assets/icon16.png', join(distDir, 'assets/icon16.png'));
+      await copyFile('./assets/icon32.png', join(distDir, 'assets/icon32.png'));
       await copyFile('./assets/icon48.png', join(distDir, 'assets/icon48.png'));
       await copyFile('./assets/icon128.png', join(distDir, 'assets/icon128.png'));
     }
