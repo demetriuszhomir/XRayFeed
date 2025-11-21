@@ -11,7 +11,16 @@ const resetButton = document.getElementById('resetButton') as HTMLElement;
 
 if (designSystemProvider) {
   designSystemProvider.setAttribute('accent-base-color', '#107C10');
-  designSystemProvider.setAttribute('base-layer-luminance', '0.98');
+  
+  const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+  
+  const updateTheme = () => {
+    const luminance = darkModeQuery.matches ? '0.15' : '0.98';
+    designSystemProvider.setAttribute('base-layer-luminance', luminance);
+  };
+
+  updateTheme();
+  darkModeQuery.addEventListener('change', updateTheme);
 }
 
 let currentConfig: ExtensionConfig;

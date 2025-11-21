@@ -8,10 +8,15 @@
   <style>
     body {
       width: 450px;
-      padding: 16px;
       margin: 0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       font-size: 14px;
+    }
+    fluent-design-system-provider {
+      display: block;
+      padding: 16px;
+      min-height: 100vh;
+      box-sizing: border-box;
     }
     .header {
       display: flex;
@@ -52,6 +57,17 @@
       margin-top: 4px;
       margin-bottom: 8px;
       font-style: italic;
+    }
+    @media (prefers-color-scheme: dark) {
+      .header {
+        border-bottom-color: #333;
+      }
+      .header a {
+        color: #69afe5;
+      }
+      .hint {
+        color: #aaa;
+      }
     }
     fluent-fieldset {
       display: block;
