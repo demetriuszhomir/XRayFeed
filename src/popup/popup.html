@@ -69,47 +69,49 @@
   </style>
 </head>
 <body>
-  <div class="header">
-    <div class="header-left">
-      <h1>XRayFeed</h1>
-      <fluent-switch id="activeToggle"></fluent-switch>
+  <fluent-design-system-provider id="designSystemProvider">
+    <div class="header">
+      <div class="header-left">
+        <h1>XRayFeed</h1>
+        <fluent-switch id="activeToggle"></fluent-switch>
+      </div>
+      <div class="header-right">
+        <fluent-button id="saveButton" appearance="accent" disabled>Save</fluent-button>
+        <fluent-button id="resetButton">Reset</fluent-button>
+        <a href="https://demetriuszhomir.com/" target="_blank">by Dmitry Zhomir</a>
+      </div>
     </div>
-    <div class="header-right">
-      <fluent-button id="saveButton" appearance="accent" disabled>Save</fluent-button>
-      <fluent-button id="resetButton">Reset</fluent-button>
-      <a href="https://demetriuszhomir.com/" target="_blank">by Dmitry Zhomir</a>
-    </div>
-  </div>
 
-  <fluent-fieldset>
-    <label slot="label">Check Frequency</label>
-    <div class="hint">How often to scan the feed for new posts</div>
-    <fluent-number-field id="frequency" min="250" max="10000" step="250" value="3000">
-      <span slot="end">ms</span>
-    </fluent-number-field>
-  </fluent-fieldset>
+    <fluent-fieldset>
+      <label slot="label">Check Frequency</label>
+      <div class="hint">How often to scan the feed for new posts</div>
+      <fluent-number-field id="frequency" min="250" max="10000" step="250" value="3000">
+        <span slot="end">ms</span>
+      </fluent-number-field>
+    </fluent-fieldset>
 
-  <fluent-fieldset>
-    <label slot="label">Max Age</label>
-    <div class="hint">Maximum post age to consider for highlighting</div>
-    <fluent-number-field id="maxHours" min="0.25" max="24" step="0.25" value="3">
-      <span slot="end">hrs</span>
-    </fluent-number-field>
-  </fluent-fieldset>
+    <fluent-fieldset>
+      <label slot="label">Max Age</label>
+      <div class="hint">Maximum post age to consider for highlighting</div>
+      <fluent-number-field id="maxHours" min="0.25" max="24" step="0.25" value="3">
+        <span slot="end">hrs</span>
+      </fluent-number-field>
+    </fluent-fieldset>
 
-  <fluent-fieldset>
-    <label slot="label">Engagement Threshold</label>
-    <div class="hint">Minimum likes per hour for a post to be highlighted</div>
-    <fluent-number-field id="likesPerHour" min="1" max="100" step="1" value="12">
-      <span slot="end">❤/h</span>
-    </fluent-number-field>
-  </fluent-fieldset>
+    <fluent-fieldset>
+      <label slot="label">Engagement Threshold</label>
+      <div class="hint">Minimum likes per hour for a post to be highlighted</div>
+      <fluent-number-field id="likesPerHour" min="1" max="100" step="1" value="12">
+        <span slot="end">❤/h</span>
+      </fluent-number-field>
+    </fluent-fieldset>
 
-  <fluent-fieldset>
-    <label slot="label">Highlight Color</label>
-    <div class="hint">CSS background color for highlighted posts</div>
-    <fluent-text-field type="text" id="highlightColor" value="lightgreen"></fluent-text-field>
-  </fluent-fieldset>
+    <fluent-fieldset>
+      <label slot="label">Highlight Color</label>
+      <div class="hint">CSS background color for highlighted posts</div>
+      <fluent-text-field type="text" id="highlightColor" value="lightgreen"></fluent-text-field>
+    </fluent-fieldset>
+  </fluent-design-system-provider>
 
   <script src="popup.js"></script>
 </body>

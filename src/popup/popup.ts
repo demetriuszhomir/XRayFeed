@@ -1,5 +1,6 @@
 import { getConfig, setConfig, resetConfig, sendMessage, DEFAULT_CONFIG, type ExtensionConfig } from '../shared/storage.ts';
 
+const designSystemProvider = document.getElementById('designSystemProvider') as any;
 const activeToggle = document.getElementById('activeToggle') as any;
 const frequencyInput = document.getElementById('frequency') as any;
 const maxHoursInput = document.getElementById('maxHours') as any;
@@ -7,6 +8,11 @@ const likesPerHourInput = document.getElementById('likesPerHour') as any;
 const highlightColorInput = document.getElementById('highlightColor') as any;
 const saveButton = document.getElementById('saveButton') as any;
 const resetButton = document.getElementById('resetButton') as HTMLElement;
+
+if (designSystemProvider) {
+  designSystemProvider.setAttribute('accent-base-color', '#107C10');
+  designSystemProvider.setAttribute('base-layer-luminance', '0.98');
+}
 
 let currentConfig: ExtensionConfig;
 let pendingChanges: Partial<ExtensionConfig> = {};
