@@ -5,10 +5,12 @@ let intervalId: number | null = null;
 let isActive = false;
 
 async function init() {
+  console.log('[XRayFeed] Content script injected on:', window.location.pathname);
   config = await getConfig();
   isActive = config.isActive;
   
-  if (isActive) {
+  if (isActive && window.location.pathname === '/home') {
+    console.log('[XRayFeed] Starting highlighting (init)');
     startHighlighting();
   }
   
@@ -19,11 +21,15 @@ function setupMessageListener() {
   onMessage((message: MessageType, sender, sendResponse) => {
     switch (message.type) {
       case 'START':
-        isActive = true;
-        startHighlighting();
+        console.log('[XRayFeed] Received START message on:', window.location.pathname);
+        if (window.location.pathname === '/home') {
+          isActive = true;
+          startHighlighting();
+        }
         sendResponse({ success: true });
         break;
       case 'STOP':
+        console.log('[XRayFeed] Received STOP message on:', window.location.pathname);
         isActive = false;
         stopHighlighting();
         sendResponse({ success: true });

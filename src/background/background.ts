@@ -39,7 +39,7 @@ onMessage((message: MessageType, sender, sendResponse) => {
 });
 
 async function notifyContentScripts(message: MessageType) {
-  const tabs = await chrome.tabs.query({ url: 'https://x.com/home' });
+  const tabs = await chrome.tabs.query({ url: 'https://x.com/*' });
   
   for (const tab of tabs) {
     if (tab.id) {
@@ -53,17 +53,24 @@ async function notifyContentScripts(message: MessageType) {
 }
 
 chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
-  if (changeInfo.status === 'complete' && tab.url === 'https://x.com/home') {
+  if (changeInfo.url && tab.url?.startsWith('https://x.com/')) {
     const config = await getConfig();
+    const url = new URL(tab.url);
     
-    if (config.isActive) {
+    if (url.pathname === '/home' && config.isActive) {
       setTimeout(async () => {
         try {
           await chrome.tabs.sendMessage(tabId, { type: 'START' });
         } catch (error) {
-          console.log('Could not initialize content script:', error);
+          console.log('Could not send START to content script:', error);
         }
-      }, 1000);
+      }, 500);
+    } else if (url.pathname !== '/home') {
+      try {
+        await chrome.tabs.sendMessage(tabId, { type: 'STOP' });
+      } catch (error) {
+        console.log('Could not send STOP to content script:', error);
+      }
     }
   }
 });
