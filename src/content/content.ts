@@ -93,6 +93,8 @@ interface TweetData {
   likes: number;
 }
 
+type EvaluatedTweetData = TweetData & { meetsCriteria: boolean };
+
 function markFilteredPosts() {
   const now = new Date();
   const tweets = Array.from(document.querySelectorAll('article[data-testid="tweet"]'));
@@ -117,28 +119,39 @@ function markFilteredPosts() {
     return { tweet, diffHours, diffMinutes, id, originalId, likes };
   }).filter((data): data is TweetData => data !== null);
   
-  tweetData.forEach((data) => {
-    let shouldFilter = false;
+  const evaluatedTweets: EvaluatedTweetData[] = tweetData.map((data) => ({
+    ...data,
+    meetsCriteria: meetsHighlightCriteria(data),
+  }));
+  
+  evaluatedTweets.forEach((data) => {
+    const hasQualifyingReply = evaluatedTweets.some(
+      (other) => other.originalId === data.id && other.meetsCriteria
+    );
+    const shouldHighlight = data.meetsCriteria || hasQualifyingReply;
     
-    if (data.diffHours > config.maxHours) {
-      const hasYoungReply = tweetData.some((other) => 
-        other.originalId === data.id && other.diffHours <= config.maxHours
-      );
-      if (!hasYoungReply) {
-        shouldFilter = true;
-      }
-    }
-    
-    if (data.diffMinutes > 10 && data.diffHours > 0 && data.likes / data.diffHours < config.likesPerHourThreshold) {
-      shouldFilter = true;
-    }
-    
-    if (!shouldFilter) {
-      data.tweet.style.backgroundColor = config.highlightColor;
-    } else {
-      data.tweet.style.backgroundColor = '';
-    }
+    data.tweet.style.backgroundColor = shouldHighlight ? config.highlightColor : '';
   });
+}
+
+function meetsHighlightCriteria(data: TweetData): boolean {
+  if (data.diffHours > config.maxHours) {
+    return false;
+  }
+  
+  if (data.diffMinutes <= 5 && data.likes <= 5) {
+    return false;
+  }
+  
+  const minutesAlive = Math.max(data.diffMinutes, 1 / 60);
+  const likesPerMinute = data.likes / minutesAlive;
+  const likesPerMinuteThreshold = config.likesPerHourThreshold / 60;
+  
+  if (likesPerMinute < likesPerMinuteThreshold) {
+    return false;
+  }
+  
+  return true;
 }
 
 if (document.readyState === 'loading') {
