@@ -65,22 +65,22 @@ activeToggle.addEventListener('change', () => {
   trackChange('isActive', isActive);
 });
 
-frequencyInput.addEventListener('change', () => {
+frequencyInput.addEventListener('input', () => {
   const frequency = parseInt(frequencyInput.value) || DEFAULT_CONFIG.frequency;
   trackChange('frequency', frequency);
 });
 
-maxHoursInput.addEventListener('change', () => {
+maxHoursInput.addEventListener('input', () => {
   const maxHours = parseFloat(maxHoursInput.value) || DEFAULT_CONFIG.maxHours;
   trackChange('maxHours', maxHours);
 });
 
-likesPerHourInput.addEventListener('change', () => {
+likesPerHourInput.addEventListener('input', () => {
   const likesPerHourThreshold = parseInt(likesPerHourInput.value) || DEFAULT_CONFIG.likesPerHourThreshold;
   trackChange('likesPerHourThreshold', likesPerHourThreshold);
 });
 
-highlightColorInput.addEventListener('change', () => {
+highlightColorInput.addEventListener('input', () => {
   const highlightColor = highlightColorInput.value || DEFAULT_CONFIG.highlightColor;
   trackChange('highlightColor', highlightColor);
 });
