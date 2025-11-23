@@ -10,7 +10,7 @@ const saveButton = document.getElementById('saveButton') as any;
 const resetButton = document.getElementById('resetButton') as HTMLElement;
 
 if (designSystemProvider) {
-  designSystemProvider.setAttribute('accent-base-color', '#107C10');
+  designSystemProvider.setAttribute('accent-base-color', '#00A668');
   
   const darkModeQuery = window.matchMedia('(prefers-color-scheme: dark)');
   
