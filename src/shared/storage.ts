@@ -25,7 +25,7 @@ export async function setConfig(config: Partial<ExtensionConfig>): Promise<void>
   await chrome.storage.sync.set({ config: newConfig });
 }
 
-export async function resetConfig(): Promise<void> {
+export async function resetDefaultConfig(): Promise<void> {
   await chrome.storage.sync.set({ config: DEFAULT_CONFIG });
 }
 

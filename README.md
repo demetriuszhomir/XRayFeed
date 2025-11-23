@@ -61,7 +61,7 @@ XRayFeed scans your home timeline and marks posts based on engagement rate & rec
    - **Max Age**: Maximum post age to consider (default: 3 hours)
    - **Engagement Threshold**: Minimum likes per hour (default: 12)
    - **Highlight Color**: CSS color for highlighting (default: lightgreen)
-5. Click "OK" to apply changes, or "Reset" to restore defaults
+5. Click "OK" to apply changes, or "Default" to restore defaults
 
 ## How It Works
 

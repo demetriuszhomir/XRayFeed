@@ -1,4 +1,4 @@
-import { getConfig, setConfig, resetConfig, sendMessage, DEFAULT_CONFIG, type ExtensionConfig } from '../shared/storage.ts';
+import { getConfig, setConfig, resetDefaultConfig, sendMessage, DEFAULT_CONFIG, type ExtensionConfig } from '../shared/storage.ts';
 
 const designSystemProvider = document.getElementById('designSystemProvider') as any;
 const activeToggle = document.getElementById('activeToggle') as any;
@@ -7,7 +7,7 @@ const maxHoursInput = document.getElementById('maxHours') as any;
 const likesPerHourInput = document.getElementById('likesPerHour') as any;
 const highlightColorInput = document.getElementById('highlightColor') as any;
 const saveButton = document.getElementById('saveButton') as any;
-const resetButton = document.getElementById('resetButton') as HTMLElement;
+const resetDefaultButton = document.getElementById('resetDefaultButton') as HTMLElement;
 
 if (designSystemProvider) {
   designSystemProvider.setAttribute('accent-base-color', '#00A668');
@@ -104,7 +104,7 @@ saveButton.addEventListener('click', async () => {
   updateSaveButton();
 });
 
-resetButton.addEventListener('click', () => {
+resetDefaultButton.addEventListener('click', () => {
   const wasActive = currentConfig.isActive;
   
   frequencyInput.value = DEFAULT_CONFIG.frequency.toString();
