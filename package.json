@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "build": "bun run build.ts",
+    "notice": "bunx generate-license-file --input package.json --output NOTICE",
     "dev": "bun run build.ts --watch",
     "clean": "rm -rf dist",
     "icons": "bun run generate-icons.ts"
