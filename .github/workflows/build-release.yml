@@ -16,6 +16,31 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
       
+      - name: Validate version numbers
+        if: github.event.inputs.release_tag != ''
+        run: |
+          EXPECTED_VERSION="${{ github.event.inputs.release_tag }}"
+          EXPECTED_VERSION="${EXPECTED_VERSION#v}"  # Remove 'v' prefix
+          
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          MANIFEST_VERSION=$(jq -r '.version' manifest.json)
+          
+          echo "Expected version: $EXPECTED_VERSION"
+          echo "package.json version: $PACKAGE_VERSION"
+          echo "manifest.json version: $MANIFEST_VERSION"
+          
+          if [ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "::error::package.json version ($PACKAGE_VERSION) does not match release tag ($EXPECTED_VERSION)"
+            exit 1
+          fi
+          
+          if [ "$MANIFEST_VERSION" != "$EXPECTED_VERSION" ]; then
+            echo "::error::manifest.json version ($MANIFEST_VERSION) does not match release tag ($EXPECTED_VERSION)"
+            exit 1
+          fi
+          
+          echo "✅ Version numbers match!"
+      
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
