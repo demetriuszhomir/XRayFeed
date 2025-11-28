@@ -7,6 +7,11 @@ on:
         description: 'Release tag name (e.g., v1.0.0) - leave empty to skip release creation'
         required: false
         type: string
+      update_versions:
+        description: 'Set to "true" to update version numbers in package.json and manifest.json before building'
+        required: false
+        type: string
+        default: ''
 
 jobs:
   build:
@@ -15,12 +20,15 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       
-      - name: Validate version numbers
+      - name: Update and validate version numbers
         if: github.event.inputs.release_tag != ''
         run: |
           EXPECTED_VERSION="${{ github.event.inputs.release_tag }}"
           EXPECTED_VERSION="${EXPECTED_VERSION#v}"  # Remove 'v' prefix
+          UPDATE_VERSIONS="${{ github.event.inputs.update_versions }}"
           
           PACKAGE_VERSION=$(jq -r '.version' package.json)
           MANIFEST_VERSION=$(jq -r '.version' manifest.json)
@@ -28,6 +36,29 @@ jobs:
           echo "Expected version: $EXPECTED_VERSION"
           echo "package.json version: $PACKAGE_VERSION"
           echo "manifest.json version: $MANIFEST_VERSION"
+          echo "Update versions: $UPDATE_VERSIONS"
+          
+          if [ "$UPDATE_VERSIONS" = "true" ]; then
+            echo "📝 Updating version numbers to $EXPECTED_VERSION..."
+            
+            # Update package.json
+            jq --arg v "$EXPECTED_VERSION" '.version = $v' package.json > package.json.tmp && mv package.json.tmp package.json
+            
+            # Update manifest.json
+            jq --arg v "$EXPECTED_VERSION" '.version = $v' manifest.json > manifest.json.tmp && mv manifest.json.tmp manifest.json
+            
+            echo "✅ Version numbers updated!"
+            
+            # Verify the updates
+            PACKAGE_VERSION=$(jq -r '.version' package.json)
+            MANIFEST_VERSION=$(jq -r '.version' manifest.json)
+            echo "Updated package.json version: $PACKAGE_VERSION"
+            echo "Updated manifest.json version: $MANIFEST_VERSION"
+          fi
+          
+          # Validate versions (after potential update)
+          PACKAGE_VERSION=$(jq -r '.version' package.json)
+          MANIFEST_VERSION=$(jq -r '.version' manifest.json)
           
           if [ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]; then
             echo "::error::package.json version ($PACKAGE_VERSION) does not match release tag ($EXPECTED_VERSION)"
@@ -39,7 +70,24 @@ jobs:
             exit 1
           fi
           
-          echo "✅ Version numbers match!"
+          echo "✅ Version numbers validated!"
+      
+      - name: Commit and push version updates
+        if: github.event.inputs.release_tag != '' && github.event.inputs.update_versions == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          git add package.json manifest.json
+          
+          # Check if there are changes to commit
+          if git diff --staged --quiet; then
+            echo "No changes to commit (versions were already correct)"
+          else
+            git commit -m "chore: bump version to ${{ github.event.inputs.release_tag }}"
+            git push origin main
+            echo "✅ Version updates committed and pushed!"
+          fi
       
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
