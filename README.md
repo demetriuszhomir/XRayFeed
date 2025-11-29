@@ -19,7 +19,7 @@ Chrome extension highlighting trending posts in the X timeline.
 > Only works on the https://x.com/home page
 
 - 🎯 **Smart Highlighting**: Identifies posts with high engagement rates
-- ⚙️ **Configurable Thresholds**: Adjust frequency, max post age, and likes-per-hour threshold
+- ⚙️ **Configurable Thresholds**: Adjust scanning frequency, max post age, and likes-per-hour threshold
 - 🎨 **Custom Colors**: Choose your preferred highlight color
 - 🔄 **Dynamic Control**: Start/stop without page refresh
 
