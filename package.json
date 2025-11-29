@@ -6,6 +6,8 @@
   "private": true,
   "scripts": {
     "build": "bun run build.ts",
+    "release": "bun run version && bun run build && bun run release.ts",
+    "version": "bun run version.ts",
     "notice": "bunx generate-license-file --input package.json --output NOTICE",
     "dev": "bun run build.ts --watch",
     "clean": "rm -rf dist",
@@ -13,6 +15,7 @@
   },
   "devDependencies": {
     "@types/chrome": "^0.1.27",
+    "jszip": "^3.10.1",
     "sharp": "^0.34.5"
   },
   "peerDependencies": {

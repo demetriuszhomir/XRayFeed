@@ -5,6 +5,7 @@ node_modules
 out
 dist
 *.tgz
+XRayFeed_v*.zip
 
 # code coverage
 coverage
