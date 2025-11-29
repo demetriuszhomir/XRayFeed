@@ -4,9 +4,7 @@
 
 # XRayFeed
 
-A Chrome extension that highlights high-performing posts on X (formerly Twitter). 
-
-XRayFeed scans your home timeline and marks posts based on engagement rate & recency, helping you quickly identify trending content.
+Chrome extension highlighting trending posts in the X timeline.
 
 </div>
 
@@ -20,11 +18,10 @@ XRayFeed scans your home timeline and marks posts based on engagement rate & rec
 
 > Only works on the https://x.com/home page
 
-- 🎯 **Smart Highlighting**: Automatically identifies posts with high engagement rates
+- 🎯 **Smart Highlighting**: Identifies posts with high engagement rates
 - ⚙️ **Configurable Thresholds**: Adjust frequency, max post age, and likes-per-hour threshold
 - 🎨 **Custom Colors**: Choose your preferred highlight color
 - 🔄 **Dynamic Control**: Start/stop without page refresh
-- 💾 **Persistent Settings**: Your configuration is saved across sessions
 
 ## Installation
 
