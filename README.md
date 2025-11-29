@@ -27,7 +27,7 @@ Chrome extension highlighting trending posts in the X timeline.
 
 1. Download the latest release ZIP file
 2. Extract the ZIP file to a folder on your computer
-3. Open Chrome and navigate to `chrome://extensions/`
+3. Navigate to the Chrome Extensions page (`chrome://extensions/`)
 4. Enable "Developer mode" using the toggle in the top right corner
 5. Click "Load unpacked" and select the extracted folder
 6. The XRayFeed icon should appear in your Chrome toolbar
