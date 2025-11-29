@@ -104,9 +104,12 @@ jobs:
         id: archive
         run: |
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
-            echo "name=xrayfeed-${{ github.event.inputs.release_tag }}.zip" >> $GITHUB_OUTPUT
+            TAG="${{ github.event.inputs.release_tag }}"
+            # Replace dots with dashes in version part
+            TAG_FORMATTED=$(echo "$TAG" | sed 's/\./-/g')
+            echo "name=XRayFeed_${TAG_FORMATTED}.zip" >> $GITHUB_OUTPUT
           else
-            echo "name=xrayfeed-build-${{ github.run_number }}.zip" >> $GITHUB_OUTPUT
+            echo "name=XRayFeed_build-${{ github.run_number }}.zip" >> $GITHUB_OUTPUT
           fi
       
       - name: Create extension archive
@@ -130,7 +133,7 @@ jobs:
             Chrome extension for highlighting high-performing posts on X.
             
             ### Installation
-            1. Download the `xrayfeed-${{ github.event.inputs.release_tag }}.zip` file
+            1. Download the `${{ steps.archive.outputs.name }}` file
             2. Extract the ZIP file
             3. Open Chrome and navigate to `chrome://extensions/`
             4. Enable "Developer mode" in the top right
