@@ -28,7 +28,7 @@ XRayFeed scans your home timeline and marks posts based on engagement rate & rec
 
 ## Installation
 
-1. Download the latest release ZIP file from the [Releases page](https://github.com/demetriuszhomir/XRayFeed/releases)
+1. Download the latest release ZIP file
 2. Extract the ZIP file to a folder on your computer
 3. Open Chrome and navigate to `chrome://extensions/`
 4. Enable "Developer mode" using the toggle in the top right corner
