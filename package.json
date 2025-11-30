@@ -1,7 +1,8 @@
 {
   "name": "xrayfeed",
   "version": "0.1.0",
-  "description": "Chrome extension that highlights high-performing posts on X",
+  "description": "Chrome extension highlighting trending posts in the X timeline",
+  "author": "Dmitry Zhomir",
   "type": "module",
   "private": true,
   "scripts": {
@@ -20,6 +21,5 @@
   },
   "peerDependencies": {
     "typescript": "^5"
-  },
-  "author": "Dmitry Zhomir"
+  }
 }

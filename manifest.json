@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "XRayFeed",
   "version": "0.1.0",
-  "description": "Highlights high-performing posts on X",
+  "description": "Highlights trending posts in the X timeline",
   "author": "Dmitry Zhomir",
   "permissions": [
     "storage",
