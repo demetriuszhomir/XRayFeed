@@ -6,13 +6,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "bun run build.ts",
-    "release": "bun run version && bun run build && bun run release.ts",
-    "version": "bun run version.ts",
+    "build": "bun run scripts/build.ts",
+    "release": "bun run version && bun run build && bun run scripts/release.ts",
+    "version": "bun run scripts/version.ts",
     "notice": "bunx generate-license-file --input package.json --output NOTICE",
-    "dev": "bun run build.ts --watch",
+    "dev": "bun run scripts/build.ts --watch",
     "clean": "rm -rf dist",
-    "icons": "bun run generate-icons.ts"
+    "icons": "bun run scripts/generate-icons.ts"
   },
   "devDependencies": {
     "@types/chrome": "^0.1.27",
