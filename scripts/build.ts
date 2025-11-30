@@ -1,9 +1,11 @@
 import { mkdir, rm, copyFile, readFile, writeFile } from 'fs/promises';
-import { existsSync } from 'fs';
+import { existsSync, lstatSync, watch as fsWatch } from 'fs';
 import { join } from 'path';
 
 const distDir = './dist';
 const srcDir = './src';
+const watchTargets = [srcDir, './assets', './manifest.json', './package.json'];
+const isWatchMode = process.argv.includes('--watch');
 
 async function build() {
   console.log('🧹 Cleaning dist directory...');
@@ -68,4 +70,63 @@ async function build() {
   console.log('✅ Build complete!');
 }
 
-build().catch(console.error);
+async function runBuild() {
+  let building = false;
+  let queued = false;
+
+  const execute = async () => {
+    if (building) {
+      queued = true;
+      return;
+    }
+    building = true;
+    try {
+      await build();
+    } catch (error) {
+      console.error(error);
+    } finally {
+      building = false;
+      if (queued) {
+        queued = false;
+        await execute();
+      }
+    }
+  };
+
+  await execute();
+
+  if (!isWatchMode) {
+    return;
+  }
+
+  const watchers = createWatchers(() => {
+    void execute();
+  });
+
+  const cleanup = () => {
+    watchers.forEach((watcher) => watcher.close());
+    process.exit(0);
+  };
+
+  process.on('SIGINT', cleanup);
+  process.on('SIGTERM', cleanup);
+}
+
+function createWatchers(onChange: () => void) {
+  console.log('👀 Watching for changes...');
+  return watchTargets
+    .filter((target) => existsSync(target))
+    .map((target) => {
+      const isDir = lstatSync(target).isDirectory();
+      return fsWatch(
+        target,
+        { recursive: isDir && process.platform !== 'linux' },
+        (_, file) => {
+          console.log(`🔁 Change detected in ${file ? join(target, file) : target}`);
+          onChange();
+        }
+      );
+    });
+}
+
+runBuild().catch(console.error);
