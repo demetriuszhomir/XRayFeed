@@ -131,8 +131,6 @@ jobs:
           prerelease: false
           files: ${{ steps.archive.outputs.name }}
           body: |
-            ## XRayFeed ${{ github.event.inputs.release_tag }}
-            
             Chrome extension highlighting trending posts in the X timeline.
             How to install/update & more: https://github.com/demetriuszhomir/XRayFeed
 
