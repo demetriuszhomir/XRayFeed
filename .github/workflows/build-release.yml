@@ -110,8 +110,10 @@ jobs:
             # Replace dots with dashes in version part
             TAG_FORMATTED=$(echo "$TAG" | sed 's/\./-/g')
             echo "name=XRayFeed_${TAG_FORMATTED}.zip" >> $GITHUB_OUTPUT
+            echo "artifact_name=XRayFeed_${TAG_FORMATTED}" >> $GITHUB_OUTPUT
           else
             echo "name=XRayFeed_build-${{ github.run_number }}.zip" >> $GITHUB_OUTPUT
+            echo "artifact_name=XRayFeed_build-${{ github.run_number }}" >> $GITHUB_OUTPUT
           fi
       
       - name: Create extension archive
@@ -146,6 +148,6 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v5
         with:
-          name: ${{ steps.archive.outputs.name }}
+          name: ${{ steps.archive.outputs.artifact_name }}
           path: dist/
           compression-level: 9
