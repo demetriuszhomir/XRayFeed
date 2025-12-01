@@ -11,7 +11,6 @@ on:
         description: 'Set to "true" to update version numbers in package.json and manifest.json before building'
         required: false
         type: string
-        default: ''
 
 jobs:
   build:
@@ -127,21 +126,19 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.release_tag }}
-          name: Release ${{ github.event.inputs.release_tag }}
+          name: ${{ github.event.inputs.release_tag }}
           draft: true
           prerelease: false
           files: ${{ steps.archive.outputs.name }}
           body: |
             ## XRayFeed ${{ github.event.inputs.release_tag }}
             
-            Chrome extension for highlighting high-performing posts on X.
-            
-            ### Installation
-            1. Download the `${{ steps.archive.outputs.name }}` file
-            2. Extract the ZIP file
-            3. Open Chrome and navigate to `chrome://extensions/`
-            4. Enable "Developer mode" in the top right
-            5. Click "Load unpacked" and select the extracted folder
+            Chrome extension highlighting trending posts in the X timeline.
+            How to install/update & more: https://github.com/demetriuszhomir/XRayFeed
+
+            ### Changes in this release
+
+            <!-- Describe the changes here -->
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       
