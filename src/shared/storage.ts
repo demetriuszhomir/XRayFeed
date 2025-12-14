@@ -11,7 +11,7 @@ export const DEFAULT_CONFIG: ExtensionConfig = {
   maxHours: 3,
   likesPerHourThreshold: 12,
   highlightColor: 'lightgreen',
-  isActive: false
+  isActive: true
 };
 
 export async function getConfig(): Promise<ExtensionConfig> {
