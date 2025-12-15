@@ -28,7 +28,7 @@ jobs:
       
       - name: Determine version using semver
         id: semver
-        if: github.event.inputs.release_tag == '' && github.event.inputs.auto_version == 'true'
+        if: github.event.inputs.release_tag == '' && github.event.inputs.auto_version == true
         run: |
           # Get current version from package.json
           CURRENT_VERSION=$(jq -r '.version' package.json)
@@ -45,14 +45,14 @@ jobs:
             # Analyze commits since last tag
             echo "Last tag: $LAST_TAG"
             
-            # Get commits since last tag
-            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s" 2>/dev/null || git log --pretty=format:"%s" -10)
+            # Get commits since last tag (full commit bodies to detect BREAKING CHANGE)
+            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s%n%b" 2>/dev/null || git log --pretty=format:"%s%n%b")
             
             # Determine version bump type based on conventional commits
             BUMP_TYPE="patch"  # Default to patch
             
-            # Check for breaking changes or major version indicators
-            if echo "$COMMITS" | grep -qiE "^(BREAKING CHANGE|breaking|major):"; then
+            # Check for breaking changes (in header or body)
+            if echo "$COMMITS" | grep -qiE "(^(breaking|major):|\bBREAKING CHANGE:)"; then
               BUMP_TYPE="major"
               echo "Detected breaking changes - bumping major version"
             # Check for features
@@ -96,7 +96,7 @@ jobs:
           echo "tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
       
       - name: Update and validate version numbers
-        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == 'true' && steps.semver.outputs.version != '')
+        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == true && steps.semver.outputs.version != '')
         run: |
           # Determine which version to use
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
@@ -152,7 +152,7 @@ jobs:
           echo "✅ Version numbers validated!"
       
       - name: Commit and push version updates
-        if: github.event.inputs.auto_version == 'true' && (github.event.inputs.release_tag != '' || steps.semver.outputs.version != '')
+        if: github.event.inputs.auto_version == true && (github.event.inputs.release_tag != '' || steps.semver.outputs.version != '')
         run: |
           # Determine version for commit message
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
@@ -215,7 +215,7 @@ jobs:
           cd ..
       
       - name: Create Release
-        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == 'true' && steps.semver.outputs.tag != '')
+        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == true && steps.semver.outputs.tag != '')
         uses: softprops/action-gh-release@v2
         with:
           tag_name: ${{ github.event.inputs.release_tag != '' && github.event.inputs.release_tag || steps.semver.outputs.tag }}
