@@ -1,6 +1,6 @@
 {
   "name": "xrayfeed",
-  "version": "0.1.2",
+  "version": "0.1.1",
   "description": "Chrome extension highlighting trending posts in the X timeline",
   "author": "Dmitry Zhomir",
   "type": "module",
