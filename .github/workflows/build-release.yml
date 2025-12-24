@@ -26,7 +26,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # Fetch all history for semver analysis
       
-      - name: Bump version and push tag
+      - name: Calculate next version with semver
         id: semver
         if: github.event.inputs.release_tag == '' && github.event.inputs.auto_version == true
         uses: mathieudutour/github-tag-action@v6.2
