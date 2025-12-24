@@ -119,6 +119,9 @@ jobs:
           fi
       
       - name: Create git tag
+        # We manually create the tag because we need to update version files FIRST,
+        # then create the tag on the commit that includes those updates.
+        # The action runs with dry_run=true to calculate the version without tagging.
         if: github.event.inputs.auto_version == true && github.event.inputs.release_tag == '' && steps.semver.outputs.new_tag != ''
         run: |
           git config user.name "github-actions[bot]"
