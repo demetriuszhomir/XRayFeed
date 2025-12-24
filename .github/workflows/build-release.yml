@@ -8,7 +8,7 @@ on:
         required: false
         type: string
       auto_version:
-        description: 'Enable semver auto-versioning and version file updates. Set to "true" to enable (when tag not provided, or always update files when tag is provided)'
+        description: 'Update version in files. If tag is not provided, enable semver auto-versioning. Set to "true" to enable'
         required: false
         type: string
 
