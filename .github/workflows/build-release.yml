@@ -4,13 +4,14 @@ on:
   workflow_dispatch:
     inputs:
       release_tag:
-        description: 'Release tag name (e.g., v1.0.0) - leave empty to skip release creation'
+        description: 'Release tag override (e.g., v1.0.0) - leave empty to use semver auto-versioning'
         required: false
         type: string
-      update_versions:
-        description: 'Set to "true" to update version numbers in package.json and manifest.json before building'
+      auto_version:
+        description: 'Enable semver auto-versioning and version file updates (when tag not provided, or always update files when tag is provided)'
         required: false
-        type: string
+        type: boolean
+        default: false
 
 jobs:
   build:
@@ -23,13 +24,32 @@ jobs:
         uses: actions/checkout@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
+          fetch-depth: 0  # Fetch all history for semver analysis
+      
+      - name: Calculate next version with semver
+        id: semver
+        if: github.event.inputs.release_tag == '' && github.event.inputs.auto_version == true
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: minor
+          default_prerelease_bump: minor
+          dry_run: true  # Don't push tag yet, we need to update files first
+          create_annotated_tag: true
+          release_branches: ^main$
       
       - name: Update and validate version numbers
-        if: github.event.inputs.release_tag != ''
+        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == true && steps.semver.outputs.new_version != '')
         run: |
-          EXPECTED_VERSION="${{ github.event.inputs.release_tag }}"
-          EXPECTED_VERSION="${EXPECTED_VERSION#v}"  # Remove 'v' prefix
-          UPDATE_VERSIONS="${{ github.event.inputs.update_versions }}"
+          # Determine which version to use
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            EXPECTED_VERSION="${{ github.event.inputs.release_tag }}"
+            EXPECTED_VERSION="${EXPECTED_VERSION#v}"  # Remove 'v' prefix
+            echo "Using explicit release tag: $EXPECTED_VERSION"
+          else
+            EXPECTED_VERSION="${{ steps.semver.outputs.new_version }}"
+            echo "Using semver calculated version: $EXPECTED_VERSION"
+          fi
           
           PACKAGE_VERSION=$(jq -r '.version' package.json)
           MANIFEST_VERSION=$(jq -r '.version' manifest.json)
@@ -37,9 +57,10 @@ jobs:
           echo "Expected version: $EXPECTED_VERSION"
           echo "package.json version: $PACKAGE_VERSION"
           echo "manifest.json version: $MANIFEST_VERSION"
-          echo "Update versions: $UPDATE_VERSIONS"
+          echo "Auto version: ${{ github.event.inputs.auto_version }}"
           
-          if [ "$UPDATE_VERSIONS" = "true" ]; then
+          # Update version files if auto_version is enabled
+          if [ "${{ github.event.inputs.auto_version }}" = "true" ]; then
             echo "📝 Updating version numbers to $EXPECTED_VERSION..."
             
             # Update package.json
@@ -62,20 +83,27 @@ jobs:
           MANIFEST_VERSION=$(jq -r '.version' manifest.json)
           
           if [ "$PACKAGE_VERSION" != "$EXPECTED_VERSION" ]; then
-            echo "::error::package.json version ($PACKAGE_VERSION) does not match release tag ($EXPECTED_VERSION)"
+            echo "::error::package.json version ($PACKAGE_VERSION) does not match expected version ($EXPECTED_VERSION)"
             exit 1
           fi
           
           if [ "$MANIFEST_VERSION" != "$EXPECTED_VERSION" ]; then
-            echo "::error::manifest.json version ($MANIFEST_VERSION) does not match release tag ($EXPECTED_VERSION)"
+            echo "::error::manifest.json version ($MANIFEST_VERSION) does not match expected version ($EXPECTED_VERSION)"
             exit 1
           fi
           
           echo "✅ Version numbers validated!"
       
       - name: Commit and push version updates
-        if: github.event.inputs.release_tag != '' && github.event.inputs.update_versions == 'true'
+        if: github.event.inputs.auto_version == true && (github.event.inputs.release_tag != '' || steps.semver.outputs.new_version != '')
         run: |
+          # Determine version for commit message
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            VERSION_TAG="${{ github.event.inputs.release_tag }}"
+          else
+            VERSION_TAG="${{ steps.semver.outputs.new_tag }}"
+          fi
+          
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           
@@ -85,7 +113,7 @@ jobs:
           if git diff --staged --quiet; then
             echo "No changes to commit (versions were already correct)"
           else
-            git commit -m "chore: bump version to ${{ github.event.inputs.release_tag }}"
+            git commit -m "chore: bump version to ${VERSION_TAG}"
             git push origin main
             echo "✅ Version updates committed and pushed!"
           fi
@@ -104,8 +132,16 @@ jobs:
       - name: Determine archive name
         id: archive
         run: |
+          # Determine the tag to use
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
             TAG="${{ github.event.inputs.release_tag }}"
+          elif [ -n "${{ steps.semver.outputs.new_tag }}" ]; then
+            TAG="${{ steps.semver.outputs.new_tag }}"
+          else
+            TAG=""
+          fi
+          
+          if [ -n "$TAG" ]; then
             # Replace dots with dashes in version part
             TAG_FORMATTED=$(echo "$TAG" | sed 's/\./-/g')
             echo "name=XRayFeed_${TAG_FORMATTED}.zip" >> $GITHUB_OUTPUT
@@ -121,12 +157,22 @@ jobs:
           zip -9 -r ../${{ steps.archive.outputs.name }} .
           cd ..
       
+      - name: Determine final release tag
+        id: release_tag
+        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == true && steps.semver.outputs.new_tag != '')
+        run: |
+          if [ -n "${{ github.event.inputs.release_tag }}" ]; then
+            echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=v${{ steps.semver.outputs.new_tag }}" >> $GITHUB_OUTPUT
+          fi
+      
       - name: Create Release
-        if: github.event.inputs.release_tag != ''
+        if: steps.release_tag.outputs.tag != ''
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: ${{ github.event.inputs.release_tag }}
-          name: ${{ github.event.inputs.release_tag }}
+          tag_name: ${{ steps.release_tag.outputs.tag }}
+          name: ${{ steps.release_tag.outputs.tag }}
           draft: true
           prerelease: false
           files: ${{ steps.archive.outputs.name }}
