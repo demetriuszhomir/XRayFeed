@@ -118,20 +118,6 @@ jobs:
             echo "✅ Version updates committed and pushed!"
           fi
       
-      - name: Create git tag
-        # We manually create the tag because we need to update version files FIRST,
-        # then create the tag on the commit that includes those updates.
-        # The action runs with dry_run=true to calculate the version without tagging.
-        if: github.event.inputs.auto_version == true && github.event.inputs.release_tag == '' && steps.semver.outputs.new_tag != ''
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-          
-          # Create annotated tag
-          git tag -a "${{ steps.semver.outputs.new_tag }}" -m "Release ${{ steps.semver.outputs.new_tag }}"
-          git push origin "${{ steps.semver.outputs.new_tag }}"
-          echo "✅ Tag ${{ steps.semver.outputs.new_tag }} created and pushed!"
-      
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
