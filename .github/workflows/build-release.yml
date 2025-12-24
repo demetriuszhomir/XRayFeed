@@ -47,6 +47,7 @@ jobs:
             echo "Using explicit release tag: $EXPECTED_VERSION"
           else
             EXPECTED_VERSION="${{ steps.semver.outputs.new_version }}"
+            EXPECTED_VERSION="${EXPECTED_VERSION#v}"  # Remove 'v' prefix
             echo "Using semver calculated version: $EXPECTED_VERSION"
           fi
           
@@ -163,7 +164,7 @@ jobs:
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
             echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
           else
-            echo "tag=v${{ steps.semver.outputs.new_tag }}" >> $GITHUB_OUTPUT
+            echo "tag=${{ steps.semver.outputs.new_tag }}" >> $GITHUB_OUTPUT
           fi
       
       - name: Create Release
