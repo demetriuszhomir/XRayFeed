@@ -26,136 +26,20 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           fetch-depth: 0  # Fetch all history for semver analysis
       
-      - name: Determine version using semver
+      - name: Bump version and push tag
         id: semver
         if: github.event.inputs.release_tag == '' && github.event.inputs.auto_version == true
-        run: |
-          # Get current version from package.json
-          CURRENT_VERSION=$(jq -r '.version' package.json)
-          echo "Current version: $CURRENT_VERSION"
-          
-          # Get the last tag (if any)
-          LAST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "")
-          
-          if [ -z "$LAST_TAG" ]; then
-            # No previous tag exists, bump from current version
-            echo "No previous tag found, bumping from current version in package.json"
-            
-            # Since there's no tag, analyze recent commits (last 50) to determine bump type
-            COMMITS=$(git log --pretty=format:"%s%n%b" -50 2>/dev/null || echo "")
-            
-            # Determine version bump type based on conventional commits
-            BUMP_TYPE="minor"  # Default to minor as per requirements
-            
-            # Check for breaking changes (in header or body)
-            if echo "$COMMITS" | grep -qiE "(^(breaking|major):|\bBREAKING CHANGE:)"; then
-              BUMP_TYPE="major"
-              echo "Detected breaking changes - bumping major version"
-            # Check for features
-            elif echo "$COMMITS" | grep -qiE "^(feat|feature):"; then
-              BUMP_TYPE="minor"
-              echo "Detected new features - bumping minor version"
-            # Check for fixes and patches
-            elif echo "$COMMITS" | grep -qiE "^(fix|patch|chore|docs|style|refactor|perf|test):"; then
-              BUMP_TYPE="patch"
-              echo "Detected fixes/patches - bumping patch version"
-            else
-              # No conventional commit format detected, assume feat (as per requirements)
-              echo "No conventional commit format detected - assuming feat, bumping minor version"
-            fi
-            
-            # Parse current version (expecting X.Y.Z format)
-            IFS='.' read -r MAJOR MINOR PATCH <<< "${CURRENT_VERSION}"
-            
-            # Validate version format
-            if ! [[ "$MAJOR" =~ ^[0-9]+$ ]] || ! [[ "$MINOR" =~ ^[0-9]+$ ]] || ! [[ "$PATCH" =~ ^[0-9]+$ ]]; then
-              echo "::error::Invalid version format in package.json: $CURRENT_VERSION (expected X.Y.Z)"
-              exit 1
-            fi
-            
-            # Bump version based on type
-            case $BUMP_TYPE in
-              major)
-                MAJOR=$((MAJOR + 1))
-                MINOR=0
-                PATCH=0
-                ;;
-              minor)
-                MINOR=$((MINOR + 1))
-                PATCH=0
-                ;;
-              patch)
-                PATCH=$((PATCH + 1))
-                ;;
-            esac
-            
-            NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-          else
-            # Analyze commits since last tag
-            echo "Last tag: $LAST_TAG"
-            
-            # Get commits since last tag (full commit bodies to detect BREAKING CHANGE)
-            COMMITS=$(git log ${LAST_TAG}..HEAD --pretty=format:"%s%n%b" 2>/dev/null || echo "")
-            
-            if [ -z "$COMMITS" ]; then
-              echo "No commits since last tag, using current version"
-              NEW_VERSION="$CURRENT_VERSION"
-            else
-              # Determine version bump type based on conventional commits
-              BUMP_TYPE="minor"  # Default to minor as per requirements
-              
-              # Check for breaking changes (in header or body)
-              if echo "$COMMITS" | grep -qiE "(^(breaking|major):|\bBREAKING CHANGE:)"; then
-                BUMP_TYPE="major"
-                echo "Detected breaking changes - bumping major version"
-              # Check for features
-              elif echo "$COMMITS" | grep -qiE "^(feat|feature):"; then
-                BUMP_TYPE="minor"
-                echo "Detected new features - bumping minor version"
-              # Check for fixes and patches
-              elif echo "$COMMITS" | grep -qiE "^(fix|patch|chore|docs|style|refactor|perf|test):"; then
-                BUMP_TYPE="patch"
-                echo "Detected fixes/patches - bumping patch version"
-              else
-                # No conventional commit format detected, assume feat (as per requirements)
-                echo "No conventional commit format detected - assuming feat, bumping minor version"
-              fi
-              
-              # Parse current version (expecting X.Y.Z format)
-              IFS='.' read -r MAJOR MINOR PATCH <<< "${CURRENT_VERSION}"
-              
-              # Validate version format
-              if ! [[ "$MAJOR" =~ ^[0-9]+$ ]] || ! [[ "$MINOR" =~ ^[0-9]+$ ]] || ! [[ "$PATCH" =~ ^[0-9]+$ ]]; then
-                echo "::error::Invalid version format in package.json: $CURRENT_VERSION (expected X.Y.Z)"
-                exit 1
-              fi
-              
-              # Bump version based on type
-              case $BUMP_TYPE in
-                major)
-                  MAJOR=$((MAJOR + 1))
-                  MINOR=0
-                  PATCH=0
-                  ;;
-                minor)
-                  MINOR=$((MINOR + 1))
-                  PATCH=0
-                  ;;
-                patch)
-                  PATCH=$((PATCH + 1))
-                  ;;
-              esac
-              
-              NEW_VERSION="${MAJOR}.${MINOR}.${PATCH}"
-            fi
-          fi
-          
-          echo "New version: $NEW_VERSION"
-          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
-          echo "tag=v${NEW_VERSION}" >> $GITHUB_OUTPUT
+        uses: mathieudutour/github-tag-action@v6.2
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          default_bump: minor
+          default_prerelease_bump: minor
+          dry_run: true  # Don't push tag yet, we need to update files first
+          create_annotated_tag: true
+          release_branches: ^main$
       
       - name: Update and validate version numbers
-        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == true && steps.semver.outputs.version != '')
+        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == true && steps.semver.outputs.new_version != '')
         run: |
           # Determine which version to use
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
@@ -163,7 +47,7 @@ jobs:
             EXPECTED_VERSION="${EXPECTED_VERSION#v}"  # Remove 'v' prefix
             echo "Using explicit release tag: $EXPECTED_VERSION"
           else
-            EXPECTED_VERSION="${{ steps.semver.outputs.version }}"
+            EXPECTED_VERSION="${{ steps.semver.outputs.new_version }}"
             echo "Using semver calculated version: $EXPECTED_VERSION"
           fi
           
@@ -211,13 +95,13 @@ jobs:
           echo "✅ Version numbers validated!"
       
       - name: Commit and push version updates
-        if: github.event.inputs.auto_version == true && (github.event.inputs.release_tag != '' || steps.semver.outputs.version != '')
+        if: github.event.inputs.auto_version == true && (github.event.inputs.release_tag != '' || steps.semver.outputs.new_version != '')
         run: |
           # Determine version for commit message
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
             VERSION_TAG="${{ github.event.inputs.release_tag }}"
           else
-            VERSION_TAG="${{ steps.semver.outputs.tag }}"
+            VERSION_TAG="${{ steps.semver.outputs.new_tag }}"
           fi
           
           git config user.name "github-actions[bot]"
@@ -233,6 +117,17 @@ jobs:
             git push origin main
             echo "✅ Version updates committed and pushed!"
           fi
+      
+      - name: Create git tag
+        if: github.event.inputs.auto_version == true && github.event.inputs.release_tag == '' && steps.semver.outputs.new_tag != ''
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          
+          # Create annotated tag
+          git tag -a "${{ steps.semver.outputs.new_tag }}" -m "Release ${{ steps.semver.outputs.new_tag }}"
+          git push origin "${{ steps.semver.outputs.new_tag }}"
+          echo "✅ Tag ${{ steps.semver.outputs.new_tag }} created and pushed!"
       
       - name: Setup Bun
         uses: oven-sh/setup-bun@v2
@@ -251,8 +146,8 @@ jobs:
           # Determine the tag to use
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
             TAG="${{ github.event.inputs.release_tag }}"
-          elif [ -n "${{ steps.semver.outputs.tag }}" ]; then
-            TAG="${{ steps.semver.outputs.tag }}"
+          elif [ -n "${{ steps.semver.outputs.new_tag }}" ]; then
+            TAG="${{ steps.semver.outputs.new_tag }}"
           else
             TAG=""
           fi
@@ -275,12 +170,12 @@ jobs:
       
       - name: Determine final release tag
         id: release_tag
-        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == true && steps.semver.outputs.tag != '')
+        if: github.event.inputs.release_tag != '' || (github.event.inputs.auto_version == true && steps.semver.outputs.new_tag != '')
         run: |
           if [ -n "${{ github.event.inputs.release_tag }}" ]; then
             echo "tag=${{ github.event.inputs.release_tag }}" >> $GITHUB_OUTPUT
           else
-            echo "tag=${{ steps.semver.outputs.tag }}" >> $GITHUB_OUTPUT
+            echo "tag=${{ steps.semver.outputs.new_tag }}" >> $GITHUB_OUTPUT
           fi
       
       - name: Create Release
