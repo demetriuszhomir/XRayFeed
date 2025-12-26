@@ -11,6 +11,7 @@ on:
         description: 'Update version in files. If tag is not provided, enable semver auto-versioning. Set to "true" to enable'
         required: false
         type: string
+        default: "false"
 
 jobs:
   build:
