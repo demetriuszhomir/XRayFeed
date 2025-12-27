@@ -25,7 +25,7 @@ Chrome extension highlighting trending posts in the X timeline.
 
 ## Installation
 
-1. Download the latest release/prerelease ZIP file (or a specific version if needed)
+1. Download the `latest` release/prerelease ZIP file (or a specific version if needed)
 2. Extract the ZIP file to a folder on your computer
 3. Navigate to the Chrome Extensions page (`chrome://extensions/`)
 4. Enable "Developer mode" using the toggle in the top right corner
@@ -34,8 +34,11 @@ Chrome extension highlighting trending posts in the X timeline.
 
 ## Updating
 
-To update the extension, extract the ZIP over the existing files from the previous version, so the path remains the same.
+To update the extension, replace the `latest` folder of the extension with the `latest` folder of the build you've downloaded & extracted from the ZIP file. The path must stay the same as before.
+<br>
 Then refresh the extension on the Extensions page.
+
+Also, you can extract the ZIP over the existing files from the previous version, so the path remains the same.
 
 ---
 

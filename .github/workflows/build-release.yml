@@ -144,6 +144,7 @@ jobs:
           body: |
             Chrome extension highlighting trending posts in the X timeline.
             How to install/update & more: https://github.com/demetriuszhomir/XRayFeed
+            👉 Use the `latest` ZIP file for easier updates.
 
             ### Changes in this release
 
