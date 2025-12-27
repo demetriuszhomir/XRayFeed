@@ -121,6 +121,7 @@ jobs:
           name: ${{ steps.tag.outputs.tag }}
           draft: true
           prerelease: false
+          preserve_order: true
           overwrite_files: false
           generate_release_notes: false
           append_body: true
