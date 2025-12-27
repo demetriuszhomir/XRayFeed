@@ -50,6 +50,20 @@ jobs:
           echo "version=$EFFECTIVE_VERSION" >> $GITHUB_OUTPUT
           echo "Effective version: $EFFECTIVE_VERSION"
       
+      - name: Check if release exists
+        if: github.event.inputs.create_release == 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TAG="${{ steps.tag.outputs.tag }}"
+          echo "Checking if release '$TAG' already exists..."
+          if gh release view "$TAG" > /dev/null 2>&1; then
+            echo "::error::Release '$TAG' already exists. Aborting to prevent overwrite."
+            exit 1
+          else
+            echo "Release '$TAG' does not exist. Proceeding."
+          fi
+
       - name: Update version in files
         if: github.event.inputs.create_release == 'true'
         run: |
@@ -107,6 +121,9 @@ jobs:
           name: ${{ steps.tag.outputs.tag }}
           draft: true
           prerelease: false
+          overwrite_files: false
+          generate_release_notes: false
+          append_body: true
           files: ${{ steps.archive.outputs.name }}
           body: |
             Chrome extension highlighting trending posts in the X timeline.
