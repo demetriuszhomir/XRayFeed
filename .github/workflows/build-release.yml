@@ -12,6 +12,11 @@ on:
         description: "Release tag (e.g., v1.0.0). Only used when create_release is true. Leave empty to use latest git tag"
         required: false
         type: string
+      is_prerelease:
+        description: 'Mark this as a prerelease. Set to "true" to enable'
+        required: false
+        type: string
+        default: "false"
 
 jobs:
   build:
@@ -120,7 +125,7 @@ jobs:
           tag_name: ${{ steps.tag.outputs.tag }}
           name: ${{ steps.tag.outputs.tag }}
           draft: true
-          prerelease: false
+          prerelease: ${{ github.event.inputs.is_prerelease == 'true' }}
           preserve_order: true
           overwrite_files: false
           generate_release_notes: false
