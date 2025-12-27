@@ -10,7 +10,7 @@ Chrome extension highlighting trending posts in the X timeline.
 
 ## Latest Download
 
-**See the [Releases](https://github.com/demetriuszhomir/XRayFeed/releases) to download the latest builds.**
+**See the [Releases](https://github.com/demetriuszhomir/XRayFeed/releases) to download the latest builds (incl. prereleases).**
 
 - 🌟 https://github.com/demetriuszhomir/XRayFeed/releases/latest
 
@@ -25,7 +25,7 @@ Chrome extension highlighting trending posts in the X timeline.
 
 ## Installation
 
-1. Download the latest release ZIP file
+1. Download the latest release/prerelease ZIP file (or a specific version if needed)
 2. Extract the ZIP file to a folder on your computer
 3. Navigate to the Chrome Extensions page (`chrome://extensions/`)
 4. Enable "Developer mode" using the toggle in the top right corner

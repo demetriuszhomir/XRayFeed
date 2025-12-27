@@ -118,6 +118,14 @@ jobs:
           zip -9 -r ../${{ steps.archive.outputs.name }} .
           cd ..
 
+      - name: Create latest.zip copy
+        id: latest
+        if: github.event.inputs.create_release == 'true'
+        run: |
+          cp ${{ steps.archive.outputs.name }} XRayFeed_latest.zip
+          echo "name=XRayFeed_latest.zip" >> $GITHUB_OUTPUT
+          echo "Created XRayFeed_latest.zip"
+
       - name: Create Release
         if: github.event.inputs.create_release == 'true'
         uses: softprops/action-gh-release@v2
@@ -130,7 +138,9 @@ jobs:
           overwrite_files: false
           generate_release_notes: false
           append_body: true
-          files: ${{ steps.archive.outputs.name }}
+          files: |
+            ${{ steps.archive.outputs.name }}
+            ${{ steps.latest.outputs.name }}
           body: |
             Chrome extension highlighting trending posts in the X timeline.
             How to install/update & more: https://github.com/demetriuszhomir/XRayFeed
