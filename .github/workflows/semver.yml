@@ -21,6 +21,8 @@ jobs:
   semver:
     name: "Semver"
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     outputs:
       new_tag: ${{ steps.semver.outputs.new_tag }}
 
