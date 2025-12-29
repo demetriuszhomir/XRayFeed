@@ -1,4 +1,5 @@
-import { getConfig, setConfig, resetDefaultConfig, sendMessage, DEFAULT_CONFIG, type ExtensionConfig } from '../shared/storage.ts';
+import { getConfig, setConfig, resetDefaultConfig, sendMessage, getUpdateState, DEFAULT_CONFIG, type ExtensionConfig } from '../shared/storage.ts';
+import { getCurrentVersion } from '../shared/update-check.ts';
 
 const designSystemProvider = document.getElementById('designSystemProvider') as any;
 const activeToggle = document.getElementById('activeToggle') as any;
@@ -8,6 +9,11 @@ const likesPerHourInput = document.getElementById('likesPerHour') as any;
 const highlightColorInput = document.getElementById('highlightColor') as any;
 const saveButton = document.getElementById('saveButton') as any;
 const resetDefaultButton = document.getElementById('resetDefaultButton') as HTMLElement;
+
+// Footer elements
+const versionText = document.getElementById('versionText') as HTMLElement;
+const updateStatus = document.getElementById('updateStatus') as HTMLElement;
+const showBadgeToggle = document.getElementById('showBadgeToggle') as any;
 
 if (designSystemProvider) {
   designSystemProvider.setAttribute('accent-base-color', '#00A668');
@@ -129,3 +135,27 @@ resetDefaultButton.addEventListener('click', () => {
 });
 
 loadConfig();
+loadUpdateStatus();
+
+async function loadUpdateStatus() {
+  // Set current version
+  versionText.textContent = `v${getCurrentVersion()}`;
+  
+  // Get update state from storage
+  const updateState = await getUpdateState();
+  
+  // Set badge toggle state
+  showBadgeToggle.checked = updateState.showBadge;
+  
+  // Set update status
+  if (updateState.updateAvailable && updateState.latestReleaseUrl) {
+    updateStatus.innerHTML = `<a href="${updateState.latestReleaseUrl}" target="_blank">Update available</a>`;
+  } else {
+    updateStatus.textContent = 'Up-to-date';
+  }
+}
+
+showBadgeToggle.addEventListener('change', async () => {
+  const showBadge = showBadgeToggle.checked;
+  await sendMessage({ type: 'SET_SHOW_BADGE', showBadge });
+});
