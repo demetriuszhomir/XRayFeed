@@ -1,4 +1,4 @@
-import { getConfig, setConfig, resetDefaultConfig, sendMessage, getUpdateState, DEFAULT_CONFIG, DEFAULT_THRESHOLDS, type ExtensionConfig, type EngagementType } from '../shared/storage.ts';
+import { getConfig, setConfig, sendMessage, getUpdateState, DEFAULT_CONFIG, DEFAULT_THRESHOLDS, type ExtensionConfig, type EngagementType } from '../shared/storage.ts';
 import { getCurrentVersion } from '../shared/update-check.ts';
 
 const designSystemProvider = document.getElementById('designSystemProvider') as any;
