@@ -58,6 +58,32 @@
       margin-bottom: 8px;
       font-style: italic;
     }
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid #e0e0e0;
+      font-size: 12px;
+    }
+    .footer-left {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #666;
+    }
+    .footer-left a {
+      color: #0078d4;
+      text-decoration: none;
+    }
+    .footer-left a:hover {
+      text-decoration: underline;
+    }
+    .footer-right {
+      display: flex;
+      align-items: center;
+    }
     @media (prefers-color-scheme: dark) {
       .header {
         border-bottom-color: #333;
@@ -67,6 +93,15 @@
       }
       .hint {
         color: #aaa;
+      }
+      .footer {
+        border-top-color: #333;
+      }
+      .footer-left {
+        color: #aaa;
+      }
+      .footer-left a {
+        color: #69afe5;
       }
     }
     fluent-fieldset {
@@ -127,6 +162,17 @@
       <div class="hint">CSS background color for highlighted posts</div>
       <fluent-text-field type="text" id="highlightColor" value="lightgreen"></fluent-text-field>
     </fluent-fieldset>
+
+    <div class="footer">
+      <div class="footer-left">
+        <span id="versionText">v0.0.0</span>
+        <span>·</span>
+        <span id="updateStatus">Up-to-date</span>
+      </div>
+      <div class="footer-right">
+        <fluent-switch id="showBadgeToggle">Show update badge</fluent-switch>
+      </div>
+    </div>
   </fluent-design-system-provider>
 
   <script src="popup.js"></script>
