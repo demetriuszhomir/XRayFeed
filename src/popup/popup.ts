@@ -1,11 +1,14 @@
-import { getConfig, setConfig, resetDefaultConfig, sendMessage, getUpdateState, DEFAULT_CONFIG, type ExtensionConfig } from '../shared/storage.ts';
+import { getConfig, setConfig, sendMessage, getUpdateState, DEFAULT_CONFIG, DEFAULT_THRESHOLDS, type ExtensionConfig, type EngagementType } from '../shared/storage.ts';
 import { getCurrentVersion } from '../shared/update-check.ts';
 
 const designSystemProvider = document.getElementById('designSystemProvider') as any;
 const activeToggle = document.getElementById('activeToggle') as any;
 const frequencyInput = document.getElementById('frequency') as any;
 const maxHoursInput = document.getElementById('maxHours') as any;
-const likesPerHourInput = document.getElementById('likesPerHour') as any;
+const engagementTypeSelect = document.getElementById('engagementType') as any;
+const engagementThresholdInput = document.getElementById('engagementThreshold') as any;
+const thresholdHint = document.getElementById('thresholdHint') as HTMLElement;
+const thresholdUnit = document.getElementById('thresholdUnit') as HTMLElement;
 const highlightColorInput = document.getElementById('highlightColor') as any;
 const saveButton = document.getElementById('saveButton') as any;
 const resetDefaultButton = document.getElementById('resetDefaultButton') as HTMLElement;
@@ -43,8 +46,46 @@ function updateUI() {
   activeToggle.checked = currentConfig.isActive;
   frequencyInput.value = currentConfig.frequency.toString();
   maxHoursInput.value = currentConfig.maxHours.toString();
-  likesPerHourInput.value = currentConfig.likesPerHourThreshold.toString();
+  
+  const engagementType = currentConfig.engagementType || DEFAULT_CONFIG.engagementType;
+  engagementTypeSelect.value = engagementType;
+  engagementTypeSelect.currentValue = engagementType;
+  
+  const thresholds = currentConfig.engagementThresholds || DEFAULT_THRESHOLDS;
+  engagementThresholdInput.value = (thresholds[engagementType] ?? DEFAULT_THRESHOLDS[engagementType]).toString();
+  
   highlightColorInput.value = currentConfig.highlightColor;
+  updateThresholdUI(engagementType);
+}
+
+function updateThresholdUI(engagementType: EngagementType) {
+  const labels: Record<EngagementType, string> = {
+    views: 'Minimum views per hour for a post to be highlighted',
+    likes: 'Minimum likes per hour for a post to be highlighted',
+    reposts: 'Minimum reposts per hour for a post to be highlighted',
+    replies: 'Minimum replies per hour for a post to be highlighted',
+    bookmarks: 'Minimum bookmarks per hour for a post to be highlighted'
+  };
+  
+  const units: Record<EngagementType, string> = {
+    views: 'views/h',
+    likes: 'likes/h',
+    reposts: 'reposts/h',
+    replies: 'replies/h',
+    bookmarks: 'bookmarks/h'
+  };
+  
+  const steps: Record<EngagementType, number> = {
+    views: 250,
+    likes: 1,
+    reposts: 1,
+    replies: 1,
+    bookmarks: 1
+  };
+  
+  thresholdHint.textContent = labels[engagementType];
+  thresholdUnit.textContent = units[engagementType];
+  engagementThresholdInput.step = steps[engagementType].toString();
 }
 
 function updateSaveButton() {
@@ -52,7 +93,12 @@ function updateSaveButton() {
 }
 
 function trackChange(field: keyof ExtensionConfig, value: any) {
-  if (currentConfig[field] !== value) {
+  const currentValue = currentConfig[field];
+  const isEqual = typeof value === 'object' 
+    ? JSON.stringify(currentValue) === JSON.stringify(value)
+    : currentValue === value;
+  
+  if (!isEqual) {
     pendingChanges[field] = value;
   } else {
     delete pendingChanges[field];
@@ -81,9 +127,31 @@ maxHoursInput.addEventListener('input', () => {
   trackChange('maxHours', maxHours);
 });
 
-likesPerHourInput.addEventListener('input', () => {
-  const likesPerHourThreshold = parseInt(likesPerHourInput.value) || DEFAULT_CONFIG.likesPerHourThreshold;
-  trackChange('likesPerHourThreshold', likesPerHourThreshold);
+engagementTypeSelect.addEventListener('change', () => {
+  const engagementType = engagementTypeSelect.value as EngagementType;
+  trackChange('engagementType', engagementType);
+  
+  // Update UI labels
+  updateThresholdUI(engagementType);
+  
+  // Load threshold: prioritize pending changes, then current config, then defaults
+  const thresholds = pendingChanges.engagementThresholds 
+    ?? currentConfig.engagementThresholds 
+    ?? DEFAULT_THRESHOLDS;
+  const savedThreshold = thresholds[engagementType] ?? DEFAULT_THRESHOLDS[engagementType];
+  engagementThresholdInput.value = savedThreshold.toString();
+});
+
+engagementThresholdInput.addEventListener('input', () => {
+  const engagementType = engagementTypeSelect.value as EngagementType;
+  const threshold = parseInt(engagementThresholdInput.value) || DEFAULT_THRESHOLDS[engagementType];
+  
+  // Update the specific threshold - prioritize pending changes over current config
+  const baseThresholds = pendingChanges.engagementThresholds 
+    ?? currentConfig.engagementThresholds 
+    ?? DEFAULT_THRESHOLDS;
+  const newThresholds = { ...baseThresholds, [engagementType]: threshold };
+  trackChange('engagementThresholds', newThresholds);
 });
 
 highlightColorInput.addEventListener('input', () => {
@@ -115,20 +183,27 @@ resetDefaultButton.addEventListener('click', () => {
   
   frequencyInput.value = DEFAULT_CONFIG.frequency.toString();
   maxHoursInput.value = DEFAULT_CONFIG.maxHours.toString();
-  likesPerHourInput.value = DEFAULT_CONFIG.likesPerHourThreshold.toString();
+  engagementTypeSelect.value = DEFAULT_CONFIG.engagementType;
+  engagementTypeSelect.currentValue = DEFAULT_CONFIG.engagementType;
+  engagementThresholdInput.value = DEFAULT_THRESHOLDS[DEFAULT_CONFIG.engagementType].toString();
   highlightColorInput.value = DEFAULT_CONFIG.highlightColor;
   activeToggle.checked = wasActive;
+  
+  // Update UI for default engagement type
+  updateThresholdUI(DEFAULT_CONFIG.engagementType);
   
   pendingChanges = {
     frequency: DEFAULT_CONFIG.frequency,
     maxHours: DEFAULT_CONFIG.maxHours,
-    likesPerHourThreshold: DEFAULT_CONFIG.likesPerHourThreshold,
+    engagementType: DEFAULT_CONFIG.engagementType,
+    engagementThresholds: { ...DEFAULT_THRESHOLDS },
     highlightColor: DEFAULT_CONFIG.highlightColor
   };
   
   if (currentConfig.frequency === DEFAULT_CONFIG.frequency) delete pendingChanges.frequency;
   if (currentConfig.maxHours === DEFAULT_CONFIG.maxHours) delete pendingChanges.maxHours;
-  if (currentConfig.likesPerHourThreshold === DEFAULT_CONFIG.likesPerHourThreshold) delete pendingChanges.likesPerHourThreshold;
+  if (currentConfig.engagementType === DEFAULT_CONFIG.engagementType) delete pendingChanges.engagementType;
+  if (JSON.stringify(currentConfig.engagementThresholds) === JSON.stringify(DEFAULT_THRESHOLDS)) delete pendingChanges.engagementThresholds;
   if (currentConfig.highlightColor === DEFAULT_CONFIG.highlightColor) delete pendingChanges.highlightColor;
   
   updateSaveButton();

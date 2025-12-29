@@ -1,9 +1,21 @@
+export type EngagementType = 'views' | 'likes' | 'reposts' | 'replies' | 'bookmarks';
+
+export interface EngagementThresholds {
+  views: number;
+  likes: number;
+  reposts: number;
+  replies: number;
+  bookmarks: number;
+}
+
 export interface ExtensionConfig {
   frequency: number;
   maxHours: number;
-  likesPerHourThreshold: number;
+  engagementType: EngagementType;
+  engagementThresholds: EngagementThresholds;
   highlightColor: string;
   isActive: boolean;
+  likesPerHourThreshold?: number; // Kept for backward compatibility with older versions
 }
 
 export interface UpdateState {
@@ -14,10 +26,19 @@ export interface UpdateState {
   updateAvailable: boolean;
 }
 
+export const DEFAULT_THRESHOLDS: EngagementThresholds = {
+  views: 3000,
+  likes: 12,
+  reposts: 5,
+  replies: 5,
+  bookmarks: 5
+};
+
 export const DEFAULT_CONFIG: ExtensionConfig = {
   frequency: 3000,
   maxHours: 3,
-  likesPerHourThreshold: 12,
+  engagementType: 'views',
+  engagementThresholds: { ...DEFAULT_THRESHOLDS },
   highlightColor: 'lightgreen',
   isActive: true
 };
@@ -30,9 +51,41 @@ export const DEFAULT_UPDATE_STATE: UpdateState = {
   updateAvailable: false
 };
 
+async function migrateConfigIfNeeded(storedConfig: any): Promise<ExtensionConfig | null> {
+  // Check if migration is needed: has old likesPerHourThreshold but no new engagementType
+  if (!storedConfig || !('likesPerHourThreshold' in storedConfig) || 'engagementType' in storedConfig) {
+    return null; // No migration needed
+  }
+  
+  const legacyThreshold = storedConfig.likesPerHourThreshold;
+  const migratedConfig: ExtensionConfig = {
+    ...DEFAULT_CONFIG,
+    ...storedConfig,
+    engagementType: 'views',
+    engagementThresholds: {
+      ...DEFAULT_THRESHOLDS,
+      likes: legacyThreshold
+    },
+    likesPerHourThreshold: legacyThreshold // Keep for backward compatibility
+  };
+  
+  // Save migrated config
+  await chrome.storage.sync.set({ config: migratedConfig });
+  
+  return migratedConfig;
+}
+
 export async function getConfig(): Promise<ExtensionConfig> {
   const result = await chrome.storage.sync.get('config');
-  return result.config || DEFAULT_CONFIG;
+  const storedConfig = result.config;
+  
+  // Try migration first
+  const migratedConfig = await migrateConfigIfNeeded(storedConfig);
+  if (migratedConfig) {
+    return migratedConfig;
+  }
+  
+  return storedConfig || DEFAULT_CONFIG;
 }
 
 export async function setConfig(config: Partial<ExtensionConfig>): Promise<void> {
