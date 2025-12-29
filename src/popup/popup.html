@@ -117,6 +117,9 @@
     fluent-text-field {
       width: 100%;
     }
+    fluent-select {
+      width: 100%;
+    }
   </style>
 </head>
 <body>
@@ -150,10 +153,22 @@
     </fluent-fieldset>
 
     <fluent-fieldset>
-      <label slot="label">Engagement Threshold</label>
-      <div class="hint">Minimum likes per hour for a post to be highlighted</div>
-      <fluent-number-field id="likesPerHour" min="1" max="100" step="1" value="12">
-        <span slot="end">❤/h</span>
+      <label slot="label">Engagement Metric</label>
+      <div class="hint">Which metric to use for trending detection</div>
+      <fluent-select id="engagementType">
+        <fluent-option value="views">Views</fluent-option>
+        <fluent-option value="likes">Likes</fluent-option>
+        <fluent-option value="reposts">Reposts</fluent-option>
+        <fluent-option value="replies">Replies</fluent-option>
+        <fluent-option value="bookmarks">Bookmarks</fluent-option>
+      </fluent-select>
+    </fluent-fieldset>
+
+    <fluent-fieldset>
+      <label slot="label" id="thresholdLabel">Engagement Threshold</label>
+      <div class="hint" id="thresholdHint">Minimum views per hour for a post to be highlighted</div>
+      <fluent-number-field id="engagementThreshold" min="1" max="10000000" step="1" value="3000">
+        <span slot="end" id="thresholdUnit">views/h</span>
       </fluent-number-field>
     </fluent-fieldset>
 

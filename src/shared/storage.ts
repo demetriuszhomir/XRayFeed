@@ -1,7 +1,18 @@
+export type EngagementType = 'views' | 'likes' | 'reposts' | 'replies' | 'bookmarks';
+
+export interface EngagementThresholds {
+  views: number;
+  likes: number;
+  reposts: number;
+  replies: number;
+  bookmarks: number;
+}
+
 export interface ExtensionConfig {
   frequency: number;
   maxHours: number;
-  likesPerHourThreshold: number;
+  engagementType: EngagementType;
+  engagementThresholds: EngagementThresholds;
   highlightColor: string;
   isActive: boolean;
 }
@@ -14,10 +25,19 @@ export interface UpdateState {
   updateAvailable: boolean;
 }
 
+export const DEFAULT_THRESHOLDS: EngagementThresholds = {
+  views: 3000,
+  likes: 12,
+  reposts: 5,
+  replies: 5,
+  bookmarks: 5
+};
+
 export const DEFAULT_CONFIG: ExtensionConfig = {
   frequency: 3000,
   maxHours: 3,
-  likesPerHourThreshold: 12,
+  engagementType: 'views',
+  engagementThresholds: { ...DEFAULT_THRESHOLDS },
   highlightColor: 'lightgreen',
   isActive: true
 };

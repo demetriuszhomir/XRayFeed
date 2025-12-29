@@ -90,10 +90,43 @@ interface TweetData {
   diffMinutes: number;
   id: string | null;
   originalId: string | null;
+  engagement: EngagementMetrics;
+}
+
+interface EngagementMetrics {
+  replies: number;
+  reposts: number;
   likes: number;
+  bookmarks: number;
+  views: number;
 }
 
 type EvaluatedTweetData = TweetData & { meetsCriteria: boolean };
+
+function extractEngagementMetrics(tweet: HTMLElement): EngagementMetrics {
+  const defaultMetrics: EngagementMetrics = { replies: 0, reposts: 0, likes: 0, bookmarks: 0, views: 0 };
+  
+  // Find the engagement group div with aria-label containing all metrics
+  // Format: "9 replies, 7 reposts, 117 likes, 17 bookmarks, 2825 views"
+  const engagementGroup = tweet.querySelector('[role="group"][aria-label*="likes"]');
+  if (!engagementGroup) return defaultMetrics;
+  
+  const ariaLabel = engagementGroup.getAttribute('aria-label') || '';
+  
+  const repliesMatch = ariaLabel.match(/(\d+)\s*repl(?:y|ies)/i);
+  const repostsMatch = ariaLabel.match(/(\d+)\s*repost/i);
+  const likesMatch = ariaLabel.match(/(\d+)\s*like/i);
+  const bookmarksMatch = ariaLabel.match(/(\d+)\s*bookmark/i);
+  const viewsMatch = ariaLabel.match(/(\d+)\s*view/i);
+  
+  return {
+    replies: repliesMatch?.[1] ? parseInt(repliesMatch[1]) : 0,
+    reposts: repostsMatch?.[1] ? parseInt(repostsMatch[1]) : 0,
+    likes: likesMatch?.[1] ? parseInt(likesMatch[1]) : 0,
+    bookmarks: bookmarksMatch?.[1] ? parseInt(bookmarksMatch[1]) : 0,
+    views: viewsMatch?.[1] ? parseInt(viewsMatch[1]) : 0
+  };
+}
 
 function markFilteredPosts() {
   const now = new Date();
@@ -112,11 +145,9 @@ function markFilteredPosts() {
     const id = tweet.getAttribute('aria-labelledby');
     const replyLink = tweet.querySelector('a[href*="/status/"]');
     const originalId = replyLink ? replyLink.getAttribute('href')?.split('/status/')[1] || null : null;
-    const likeButton = tweet.querySelector('button[data-testid="like"]');
-    const likesText = likeButton ? likeButton.getAttribute('aria-label') || '0 Likes' : '0 Likes';
-    const likes = parseInt(likesText.replace(' Like', '').replace(' Likes', '')) || 0;
+    const engagement = extractEngagementMetrics(tweet);
     
-    return { tweet, diffHours, diffMinutes, id, originalId, likes };
+    return { tweet, diffHours, diffMinutes, id, originalId, engagement };
   }).filter((data): data is TweetData => data !== null);
   
   const evaluatedTweets: EvaluatedTweetData[] = tweetData.map((data) => ({
@@ -139,15 +170,20 @@ function meetsHighlightCriteria(data: TweetData): boolean {
     return false;
   }
   
-  if (data.diffMinutes <= 5 && data.likes <= 5) {
+  const engagementType = config.engagementType;
+  const engagementValue = data.engagement[engagementType];
+  const threshold = config.engagementThresholds[engagementType];
+  
+  // Skip very new posts with minimal engagement
+  if (data.diffMinutes <= 5 && engagementValue <= 5) {
     return false;
   }
   
   const minutesAlive = Math.max(data.diffMinutes, 1 / 60);
-  const likesPerMinute = data.likes / minutesAlive;
-  const likesPerMinuteThreshold = config.likesPerHourThreshold / 60;
+  const engagementPerMinute = engagementValue / minutesAlive;
+  const thresholdPerMinute = threshold / 60;
   
-  if (likesPerMinute < likesPerMinuteThreshold) {
+  if (engagementPerMinute < thresholdPerMinute) {
     return false;
   }
   
