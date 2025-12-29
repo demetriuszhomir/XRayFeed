@@ -15,6 +15,7 @@ export interface ExtensionConfig {
   engagementThresholds: EngagementThresholds;
   highlightColor: string;
   isActive: boolean;
+  likesPerHourThreshold?: number; // Kept for backward compatibility with older versions
 }
 
 export interface UpdateState {
@@ -50,9 +51,41 @@ export const DEFAULT_UPDATE_STATE: UpdateState = {
   updateAvailable: false
 };
 
+async function migrateConfigIfNeeded(storedConfig: any): Promise<ExtensionConfig | null> {
+  // Check if migration is needed: has old likesPerHourThreshold but no new engagementType
+  if (!storedConfig || !('likesPerHourThreshold' in storedConfig) || 'engagementType' in storedConfig) {
+    return null; // No migration needed
+  }
+  
+  const legacyThreshold = storedConfig.likesPerHourThreshold;
+  const migratedConfig: ExtensionConfig = {
+    ...DEFAULT_CONFIG,
+    ...storedConfig,
+    engagementType: 'views',
+    engagementThresholds: {
+      ...DEFAULT_THRESHOLDS,
+      likes: legacyThreshold
+    },
+    likesPerHourThreshold: legacyThreshold // Keep for backward compatibility
+  };
+  
+  // Save migrated config
+  await chrome.storage.sync.set({ config: migratedConfig });
+  
+  return migratedConfig;
+}
+
 export async function getConfig(): Promise<ExtensionConfig> {
   const result = await chrome.storage.sync.get('config');
-  return result.config || DEFAULT_CONFIG;
+  const storedConfig = result.config;
+  
+  // Try migration first
+  const migratedConfig = await migrateConfigIfNeeded(storedConfig);
+  if (migratedConfig) {
+    return migratedConfig;
+  }
+  
+  return storedConfig || DEFAULT_CONFIG;
 }
 
 export async function setConfig(config: Partial<ExtensionConfig>): Promise<void> {
