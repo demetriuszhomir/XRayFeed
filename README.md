@@ -35,11 +35,25 @@ Chrome extension highlighting trending posts in the X timeline.
 
 ## Updating
 
+### Manual Update Process
+
 To update the extension, replace the `latest` folder of the extension with the `latest` folder of the build you've downloaded & extracted from the ZIP file. The path must stay the same as before.
 <br>
-Then refresh the extension on the Extensions page.
+❗ **Then refresh the extension on the Extensions page.**
 
-Also, you can extract the ZIP over the existing files from the previous version, so the path remains the same.
+Also, you can extract the ZIP over the existing files from any previous version, but make sure to keep the path the same.
+
+### Update Notifications
+
+The extension automatically checks for updates from GitHub releases.
+
+You can see its **current version** in the popup UI.
+<br>
+When a new version is available, it also shows "**Update available**" with a direct **link to the latest release**. Also, the **icon badge** will appear if it's enabled in settings.
+
+If you're on a **stable release**, you'll only be notified about newer stable releases. If you're on a **prerelease** — then any newer release (stable or prerelease).
+<br>
+*NOTE: if a prerelease gets updated to a stable release, it'll be scanning for newer stable releases only.*
 
 ---
 
