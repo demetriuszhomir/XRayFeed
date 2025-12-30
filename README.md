@@ -26,12 +26,12 @@ Chrome extension highlighting trending posts in the X timeline.
 
 ## Installation
 
-1. Download the `latest` release/prerelease ZIP file (or a specific version if needed)
-2. Extract the ZIP file to a folder on your computer
-3. Navigate to the Chrome Extensions page (`chrome://extensions/`)
-4. Enable "Developer mode" using the toggle in the top right corner
-5. Click "Load unpacked" and select the extracted folder
-6. The XRayFeed icon should appear in your Chrome toolbar
+1. **Download** the `latest` release/prerelease ZIP file (or a specific version if needed)
+2. **Extract** the ZIP file to a folder on your computer
+3. Navigate to the **Chrome Extensions page** (`chrome://extensions/`)
+4. Enable "**Developer mode**" using the toggle in the top right corner
+5. Click "**Load unpacked**" and select the extracted folder
+6. The XRayFeed icon should appear **in your Chrome toolbar**
 
 ## Updating
 
@@ -53,7 +53,7 @@ When a new version is available, it also shows "**Update available**" with a dir
 
 If you're on a **stable release**, you'll only be notified about newer stable releases. If you're on a **prerelease** — then any newer release (stable or prerelease).
 <br>
-*NOTE: if a prerelease gets updated to a stable release, it'll be scanning for newer stable releases only.*
+⚠️ *NOTE: if a prerelease gets updated to a stable release, it'll be scanning for newer stable releases only.*
 
 ---
 
