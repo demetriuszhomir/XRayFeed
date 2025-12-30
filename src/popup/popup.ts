@@ -34,6 +34,8 @@ if (designSystemProvider) {
 
 let currentConfig: ExtensionConfig;
 let pendingChanges: Partial<ExtensionConfig> = {};
+let savedShowBadge: boolean = true;
+let pendingShowBadge: boolean | null = null;
 
 async function loadConfig() {
   currentConfig = await getConfig();
@@ -89,7 +91,9 @@ function updateThresholdUI(engagementType: EngagementType) {
 }
 
 function updateSaveButton() {
-  saveButton.disabled = Object.keys(pendingChanges).length === 0;
+  const hasConfigChanges = Object.keys(pendingChanges).length > 0;
+  const hasBadgeChange = pendingShowBadge !== null;
+  saveButton.disabled = !hasConfigChanges && !hasBadgeChange;
 }
 
 function trackChange(field: keyof ExtensionConfig, value: any) {
@@ -160,18 +164,28 @@ highlightColorInput.addEventListener('input', () => {
 });
 
 saveButton.addEventListener('click', async () => {
-  if (Object.keys(pendingChanges).length === 0) return;
+  const hasConfigChanges = Object.keys(pendingChanges).length > 0;
+  const hasBadgeChange = pendingShowBadge !== null;
+  if (!hasConfigChanges && !hasBadgeChange) return;
   
-  currentConfig = { ...currentConfig, ...pendingChanges };
-  await setConfig(pendingChanges);
-  await sendMessage({ type: 'UPDATE_CONFIG', config: pendingChanges });
-  
-  if ('isActive' in pendingChanges) {
-    if (pendingChanges.isActive) {
-      await sendMessage({ type: 'START' });
-    } else {
-      await sendMessage({ type: 'STOP' });
+  if (hasConfigChanges) {
+    currentConfig = { ...currentConfig, ...pendingChanges };
+    await setConfig(pendingChanges);
+    await sendMessage({ type: 'UPDATE_CONFIG', config: pendingChanges });
+    
+    if ('isActive' in pendingChanges) {
+      if (pendingChanges.isActive) {
+        await sendMessage({ type: 'START' });
+      } else {
+        await sendMessage({ type: 'STOP' });
+      }
     }
+  }
+  
+  if (hasBadgeChange && pendingShowBadge !== null) {
+    savedShowBadge = pendingShowBadge;
+    await sendMessage({ type: 'SET_SHOW_BADGE', showBadge: pendingShowBadge });
+    pendingShowBadge = null;
   }
   
   pendingChanges = {};
@@ -220,6 +234,7 @@ async function loadUpdateStatus() {
   const updateState = await getUpdateState();
   
   // Set badge toggle state
+  savedShowBadge = updateState.showBadge;
   showBadgeToggle.checked = updateState.showBadge;
   
   // Set update status
@@ -230,7 +245,12 @@ async function loadUpdateStatus() {
   }
 }
 
-showBadgeToggle.addEventListener('change', async () => {
+showBadgeToggle.addEventListener('change', () => {
   const showBadge = showBadgeToggle.checked;
-  await sendMessage({ type: 'SET_SHOW_BADGE', showBadge });
+  if (showBadge === savedShowBadge) {
+    pendingShowBadge = null;
+  } else {
+    pendingShowBadge = showBadge;
+  }
+  updateSaveButton();
 });
