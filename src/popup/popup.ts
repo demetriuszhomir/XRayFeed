@@ -34,6 +34,20 @@ if (designSystemProvider) {
 
 let currentConfig: ExtensionConfig;
 let pendingChanges: Partial<ExtensionConfig> = {};
+let savedShowBadge: boolean = true;
+let pendingShowBadge: boolean | null = null;
+
+const THRESHOLD_KEYS: EngagementType[] = ['views', 'likes', 'reposts', 'replies', 'bookmarks'];
+
+function normalizeThresholds(input: any) {
+  return { ...DEFAULT_THRESHOLDS, ...(input ?? {}) };
+}
+
+function thresholdsEqual(a: any, b: any) {
+  const aa = normalizeThresholds(a);
+  const bb = normalizeThresholds(b);
+  return THRESHOLD_KEYS.every((k) => Number(aa[k]) === Number(bb[k]));
+}
 
 async function loadConfig() {
   currentConfig = await getConfig();
@@ -89,14 +103,18 @@ function updateThresholdUI(engagementType: EngagementType) {
 }
 
 function updateSaveButton() {
-  saveButton.disabled = Object.keys(pendingChanges).length === 0;
+  const hasConfigChanges = Object.keys(pendingChanges).length > 0;
+  const hasBadgeChange = pendingShowBadge !== null;
+  saveButton.disabled = !hasConfigChanges && !hasBadgeChange;
 }
 
 function trackChange(field: keyof ExtensionConfig, value: any) {
   const currentValue = currentConfig[field];
-  const isEqual = typeof value === 'object' 
-    ? JSON.stringify(currentValue) === JSON.stringify(value)
-    : currentValue === value;
+  const isEqual = field === 'engagementThresholds'
+    ? thresholdsEqual(currentValue as any, value)
+    : typeof value === 'object'
+      ? JSON.stringify(currentValue) === JSON.stringify(value)
+      : currentValue === value;
   
   if (!isEqual) {
     pendingChanges[field] = value;
@@ -160,18 +178,28 @@ highlightColorInput.addEventListener('input', () => {
 });
 
 saveButton.addEventListener('click', async () => {
-  if (Object.keys(pendingChanges).length === 0) return;
+  const hasConfigChanges = Object.keys(pendingChanges).length > 0;
+  const hasBadgeChange = pendingShowBadge !== null;
+  if (!hasConfigChanges && !hasBadgeChange) return;
   
-  currentConfig = { ...currentConfig, ...pendingChanges };
-  await setConfig(pendingChanges);
-  await sendMessage({ type: 'UPDATE_CONFIG', config: pendingChanges });
-  
-  if ('isActive' in pendingChanges) {
-    if (pendingChanges.isActive) {
-      await sendMessage({ type: 'START' });
-    } else {
-      await sendMessage({ type: 'STOP' });
+  if (hasConfigChanges) {
+    currentConfig = { ...currentConfig, ...pendingChanges };
+    await setConfig(pendingChanges);
+    await sendMessage({ type: 'UPDATE_CONFIG', config: pendingChanges });
+    
+    if ('isActive' in pendingChanges) {
+      if (pendingChanges.isActive) {
+        await sendMessage({ type: 'START' });
+      } else {
+        await sendMessage({ type: 'STOP' });
+      }
     }
+  }
+  
+  if (hasBadgeChange && pendingShowBadge !== null) {
+    savedShowBadge = pendingShowBadge;
+    await sendMessage({ type: 'SET_SHOW_BADGE', showBadge: pendingShowBadge });
+    pendingShowBadge = null;
   }
   
   pendingChanges = {};
@@ -179,7 +207,8 @@ saveButton.addEventListener('click', async () => {
 });
 
 resetDefaultButton.addEventListener('click', () => {
-  const wasActive = currentConfig.isActive;
+  // Preserve pending isActive change before resetting
+  const pendingIsActive = pendingChanges.isActive;
   
   frequencyInput.value = DEFAULT_CONFIG.frequency.toString();
   maxHoursInput.value = DEFAULT_CONFIG.maxHours.toString();
@@ -187,7 +216,6 @@ resetDefaultButton.addEventListener('click', () => {
   engagementTypeSelect.currentValue = DEFAULT_CONFIG.engagementType;
   engagementThresholdInput.value = DEFAULT_THRESHOLDS[DEFAULT_CONFIG.engagementType].toString();
   highlightColorInput.value = DEFAULT_CONFIG.highlightColor;
-  activeToggle.checked = wasActive;
   
   // Update UI for default engagement type
   updateThresholdUI(DEFAULT_CONFIG.engagementType);
@@ -200,10 +228,13 @@ resetDefaultButton.addEventListener('click', () => {
     highlightColor: DEFAULT_CONFIG.highlightColor
   };
   
+  // Restore pending isActive change
+  if (pendingIsActive !== undefined) pendingChanges.isActive = pendingIsActive;
+  
   if (currentConfig.frequency === DEFAULT_CONFIG.frequency) delete pendingChanges.frequency;
   if (currentConfig.maxHours === DEFAULT_CONFIG.maxHours) delete pendingChanges.maxHours;
   if (currentConfig.engagementType === DEFAULT_CONFIG.engagementType) delete pendingChanges.engagementType;
-  if (JSON.stringify(currentConfig.engagementThresholds) === JSON.stringify(DEFAULT_THRESHOLDS)) delete pendingChanges.engagementThresholds;
+  if (thresholdsEqual(currentConfig.engagementThresholds as any, DEFAULT_THRESHOLDS)) delete pendingChanges.engagementThresholds;
   if (currentConfig.highlightColor === DEFAULT_CONFIG.highlightColor) delete pendingChanges.highlightColor;
   
   updateSaveButton();
@@ -220,6 +251,7 @@ async function loadUpdateStatus() {
   const updateState = await getUpdateState();
   
   // Set badge toggle state
+  savedShowBadge = updateState.showBadge;
   showBadgeToggle.checked = updateState.showBadge;
   
   // Set update status
@@ -230,7 +262,12 @@ async function loadUpdateStatus() {
   }
 }
 
-showBadgeToggle.addEventListener('change', async () => {
+showBadgeToggle.addEventListener('change', () => {
   const showBadge = showBadgeToggle.checked;
-  await sendMessage({ type: 'SET_SHOW_BADGE', showBadge });
+  if (showBadge === savedShowBadge) {
+    pendingShowBadge = null;
+  } else {
+    pendingShowBadge = showBadge;
+  }
+  updateSaveButton();
 });
