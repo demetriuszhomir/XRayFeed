@@ -193,7 +193,8 @@ saveButton.addEventListener('click', async () => {
 });
 
 resetDefaultButton.addEventListener('click', () => {
-  const wasActive = currentConfig.isActive;
+  // Preserve pending isActive change before resetting
+  const pendingIsActive = pendingChanges.isActive;
   
   frequencyInput.value = DEFAULT_CONFIG.frequency.toString();
   maxHoursInput.value = DEFAULT_CONFIG.maxHours.toString();
@@ -201,7 +202,6 @@ resetDefaultButton.addEventListener('click', () => {
   engagementTypeSelect.currentValue = DEFAULT_CONFIG.engagementType;
   engagementThresholdInput.value = DEFAULT_THRESHOLDS[DEFAULT_CONFIG.engagementType].toString();
   highlightColorInput.value = DEFAULT_CONFIG.highlightColor;
-  activeToggle.checked = wasActive;
   
   // Update UI for default engagement type
   updateThresholdUI(DEFAULT_CONFIG.engagementType);
@@ -213,6 +213,9 @@ resetDefaultButton.addEventListener('click', () => {
     engagementThresholds: { ...DEFAULT_THRESHOLDS },
     highlightColor: DEFAULT_CONFIG.highlightColor
   };
+  
+  // Restore pending isActive change
+  if (pendingIsActive !== undefined) pendingChanges.isActive = pendingIsActive;
   
   if (currentConfig.frequency === DEFAULT_CONFIG.frequency) delete pendingChanges.frequency;
   if (currentConfig.maxHours === DEFAULT_CONFIG.maxHours) delete pendingChanges.maxHours;
