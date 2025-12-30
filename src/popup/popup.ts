@@ -37,6 +37,18 @@ let pendingChanges: Partial<ExtensionConfig> = {};
 let savedShowBadge: boolean = true;
 let pendingShowBadge: boolean | null = null;
 
+const THRESHOLD_KEYS: EngagementType[] = ['views', 'likes', 'reposts', 'replies', 'bookmarks'];
+
+function normalizeThresholds(input: any) {
+  return { ...DEFAULT_THRESHOLDS, ...(input ?? {}) };
+}
+
+function thresholdsEqual(a: any, b: any) {
+  const aa = normalizeThresholds(a);
+  const bb = normalizeThresholds(b);
+  return THRESHOLD_KEYS.every((k) => Number(aa[k]) === Number(bb[k]));
+}
+
 async function loadConfig() {
   currentConfig = await getConfig();
   pendingChanges = {};
@@ -98,9 +110,11 @@ function updateSaveButton() {
 
 function trackChange(field: keyof ExtensionConfig, value: any) {
   const currentValue = currentConfig[field];
-  const isEqual = typeof value === 'object' 
-    ? JSON.stringify(currentValue) === JSON.stringify(value)
-    : currentValue === value;
+  const isEqual = field === 'engagementThresholds'
+    ? thresholdsEqual(currentValue as any, value)
+    : typeof value === 'object'
+      ? JSON.stringify(currentValue) === JSON.stringify(value)
+      : currentValue === value;
   
   if (!isEqual) {
     pendingChanges[field] = value;
@@ -220,7 +234,7 @@ resetDefaultButton.addEventListener('click', () => {
   if (currentConfig.frequency === DEFAULT_CONFIG.frequency) delete pendingChanges.frequency;
   if (currentConfig.maxHours === DEFAULT_CONFIG.maxHours) delete pendingChanges.maxHours;
   if (currentConfig.engagementType === DEFAULT_CONFIG.engagementType) delete pendingChanges.engagementType;
-  if (JSON.stringify(currentConfig.engagementThresholds) === JSON.stringify(DEFAULT_THRESHOLDS)) delete pendingChanges.engagementThresholds;
+  if (thresholdsEqual(currentConfig.engagementThresholds as any, DEFAULT_THRESHOLDS)) delete pendingChanges.engagementThresholds;
   if (currentConfig.highlightColor === DEFAULT_CONFIG.highlightColor) delete pendingChanges.highlightColor;
   
   updateSaveButton();
