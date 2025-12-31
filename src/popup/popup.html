@@ -67,22 +67,23 @@
       border-top: 1px solid #e0e0e0;
       font-size: 12px;
     }
-    .footer-left {
+    .footer-version {
       display: flex;
       align-items: center;
       gap: 6px;
       color: #666;
     }
-    .footer-left a {
+    .footer-version a {
       color: #0078d4;
       text-decoration: none;
     }
-    .footer-left a:hover {
+    .footer-version a:hover {
       text-decoration: underline;
     }
-    .footer-right {
+    .footer-toggles {
       display: flex;
       align-items: center;
+      gap: 16px;
     }
     @media (prefers-color-scheme: dark) {
       .header {
@@ -97,10 +98,10 @@
       .footer {
         border-top-color: #333;
       }
-      .footer-left {
+      .footer-version {
         color: #aaa;
       }
-      .footer-left a {
+      .footer-version a {
         color: #69afe5;
       }
     }
@@ -179,13 +180,14 @@
     </fluent-fieldset>
 
     <div class="footer">
-      <div class="footer-left">
+      <div class="footer-version">
         <span id="versionText">v0.0.0</span>
         <span>·</span>
         <span id="updateStatus">Up-to-date</span>
       </div>
-      <div class="footer-right">
-        <fluent-switch id="showBadgeToggle">Show update badge</fluent-switch>
+      <div class="footer-toggles">
+        <fluent-switch id="stableOnlyToggle">Stable only</fluent-switch>
+        <fluent-switch id="showBadgeToggle">Update badge</fluent-switch>
       </div>
     </div>
   </fluent-design-system-provider>

@@ -38,8 +38,8 @@ async function scheduleUpdateCheck() {
 async function performUpdateCheck() {
   console.log('[XRayFeed] Checking for updates...');
   
-  const result = await checkForUpdates();
   const updateState = await getUpdateState();
+  const result = await checkForUpdates(updateState.stableOnly);
   
   await setUpdateState({
     lastCheckTimestamp: Date.now(),
@@ -96,8 +96,14 @@ onMessage((message: MessageType, sender, sendResponse) => {
         
       case 'SET_SHOW_BADGE':
         await setUpdateState({ showBadge: message.showBadge });
-        const updateState = await getUpdateState();
-        await updateBadge(message.showBadge && updateState.updateAvailable);
+        const badgeState = await getUpdateState();
+        await updateBadge(message.showBadge && badgeState.updateAvailable);
+        sendResponse({ success: true });
+        break;
+        
+      case 'SET_STABLE_ONLY':
+        await setUpdateState({ stableOnly: message.stableOnly });
+        await performUpdateCheck();
         sendResponse({ success: true });
         break;
     }

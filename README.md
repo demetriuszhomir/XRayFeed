@@ -49,11 +49,9 @@ The extension automatically checks for updates from GitHub releases.
 
 You can see its **current version** in the popup UI.
 <br>
-When a new version is available, it also shows "**Update available**" with a direct **link to the latest release**. Also, the **icon badge** will appear if it's enabled in settings.
-
-If you're on a **stable release**, you'll only be notified about newer stable releases. If you're on a **prerelease** — then any newer release (stable or prerelease).
+When a new version is available, it also shows "**Update**" with a direct **link to the latest release**. Also, the **icon badge** will appear if it's enabled in settings.
 <br>
-⚠️ *NOTE: if a prerelease gets updated to a stable release, it'll be scanning for newer stable releases only.*
+You can configure whether to check for **stable releases only** or include **prereleases** as well.
 
 ---
 

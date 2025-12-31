@@ -16,6 +16,7 @@ const resetDefaultButton = document.getElementById('resetDefaultButton') as HTML
 // Footer elements
 const versionText = document.getElementById('versionText') as HTMLElement;
 const updateStatus = document.getElementById('updateStatus') as HTMLElement;
+const stableOnlyToggle = document.getElementById('stableOnlyToggle') as any;
 const showBadgeToggle = document.getElementById('showBadgeToggle') as any;
 
 if (designSystemProvider) {
@@ -36,6 +37,8 @@ let currentConfig: ExtensionConfig;
 let pendingChanges: Partial<ExtensionConfig> = {};
 let savedShowBadge: boolean = true;
 let pendingShowBadge: boolean | null = null;
+let savedStableOnly: boolean = true;
+let pendingStableOnly: boolean | null = null;
 
 const THRESHOLD_KEYS: EngagementType[] = ['views', 'likes', 'reposts', 'replies', 'bookmarks'];
 
@@ -105,7 +108,8 @@ function updateThresholdUI(engagementType: EngagementType) {
 function updateSaveButton() {
   const hasConfigChanges = Object.keys(pendingChanges).length > 0;
   const hasBadgeChange = pendingShowBadge !== null;
-  saveButton.disabled = !hasConfigChanges && !hasBadgeChange;
+  const hasStableOnlyChange = pendingStableOnly !== null;
+  saveButton.disabled = !hasConfigChanges && !hasBadgeChange && !hasStableOnlyChange;
 }
 
 function trackChange(field: keyof ExtensionConfig, value: any) {
@@ -180,7 +184,8 @@ highlightColorInput.addEventListener('input', () => {
 saveButton.addEventListener('click', async () => {
   const hasConfigChanges = Object.keys(pendingChanges).length > 0;
   const hasBadgeChange = pendingShowBadge !== null;
-  if (!hasConfigChanges && !hasBadgeChange) return;
+  const hasStableOnlyChange = pendingStableOnly !== null;
+  if (!hasConfigChanges && !hasBadgeChange && !hasStableOnlyChange) return;
   
   if (hasConfigChanges) {
     currentConfig = { ...currentConfig, ...pendingChanges };
@@ -200,6 +205,14 @@ saveButton.addEventListener('click', async () => {
     savedShowBadge = pendingShowBadge;
     await sendMessage({ type: 'SET_SHOW_BADGE', showBadge: pendingShowBadge });
     pendingShowBadge = null;
+  }
+  
+  if (hasStableOnlyChange && pendingStableOnly !== null) {
+    savedStableOnly = pendingStableOnly;
+    await sendMessage({ type: 'SET_STABLE_ONLY', stableOnly: pendingStableOnly });
+    pendingStableOnly = null;
+    // Reload update status after stableOnly change (new check is triggered in background)
+    setTimeout(loadUpdateStatus, 500);
   }
   
   pendingChanges = {};
@@ -254,9 +267,13 @@ async function loadUpdateStatus() {
   savedShowBadge = updateState.showBadge;
   showBadgeToggle.checked = updateState.showBadge;
   
+  // Set stable only toggle state
+  savedStableOnly = updateState.stableOnly;
+  stableOnlyToggle.checked = updateState.stableOnly;
+  
   // Set update status
   if (updateState.updateAvailable && updateState.latestReleaseUrl) {
-    updateStatus.innerHTML = `<a href="${updateState.latestReleaseUrl}" target="_blank">Update available</a>`;
+    updateStatus.innerHTML = `<a href="${updateState.latestReleaseUrl}" target="_blank">Update</a>`;
   } else {
     updateStatus.textContent = 'Up-to-date';
   }
@@ -268,6 +285,16 @@ showBadgeToggle.addEventListener('change', () => {
     pendingShowBadge = null;
   } else {
     pendingShowBadge = showBadge;
+  }
+  updateSaveButton();
+});
+
+stableOnlyToggle.addEventListener('change', () => {
+  const stableOnly = stableOnlyToggle.checked;
+  if (stableOnly === savedStableOnly) {
+    pendingStableOnly = null;
+  } else {
+    pendingStableOnly = stableOnly;
   }
   updateSaveButton();
 });
