@@ -40,7 +40,7 @@ export const DEFAULT_CONFIG: ExtensionConfig = {
   maxHours: 3,
   engagementType: 'views',
   engagementThresholds: { ...DEFAULT_THRESHOLDS },
-  highlightColor: 'lightgreen',
+  highlightColor: '#064e3b',
   isActive: true
 };
 
