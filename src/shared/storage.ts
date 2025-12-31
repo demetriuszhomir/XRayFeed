@@ -20,6 +20,7 @@ export interface ExtensionConfig {
 
 export interface UpdateState {
   showBadge: boolean;
+  stableOnly: boolean;
   lastCheckTimestamp: number;
   latestVersion: string | null;
   latestReleaseUrl: string | null;
@@ -45,6 +46,7 @@ export const DEFAULT_CONFIG: ExtensionConfig = {
 
 export const DEFAULT_UPDATE_STATE: UpdateState = {
   showBadge: true,
+  stableOnly: true,
   lastCheckTimestamp: 0,
   latestVersion: null,
   latestReleaseUrl: null,
@@ -115,7 +117,8 @@ export type MessageType =
   | { type: 'UPDATE_CONFIG'; config: Partial<ExtensionConfig> }
   | { type: 'GET_STATUS' }
   | { type: 'STATUS_RESPONSE'; isActive: boolean }
-  | { type: 'SET_SHOW_BADGE'; showBadge: boolean };
+  | { type: 'SET_SHOW_BADGE'; showBadge: boolean }
+  | { type: 'SET_STABLE_ONLY'; stableOnly: boolean };
 
 export function sendMessage(message: MessageType): Promise<any> {
   return chrome.runtime.sendMessage(message);
